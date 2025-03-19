@@ -26,52 +26,44 @@ let ClassService = class ClassService {
         this.schoolRepo = schoolRepo;
         this.studentRepo = studentRepo;
     }
-    async addClass(subSchoolId, dto) {
-        const subSchool = await this.schoolRepo.findOne({ where: { id: subSchoolId } });
-        if (!subSchool) {
-            throw new common_1.NotFoundException('School not found');
-        }
-        const existingClass = await this.classRepo.findOne({ where: { className: dto.name, school: subSchool } });
-        if (existingClass) {
-            throw new common_1.ConflictException('Class already exists');
-        }
-        const newClass = this.classRepo.create(Object.assign(Object.assign({}, dto), { className: dto.name, school: subSchool }));
-        return await this.classRepo.save(newClass);
-    }
-    async deleteClass(subSchoolId, classId) {
-        const classDelete = await this.classRepo.findOne({ where: { id: classId, school: { id: subSchoolId } } });
-        if (!classDelete) {
-            throw new common_1.NotFoundException('Class Not Found');
-        }
-        const subSchool = await this.schoolRepo.findOne({ where: { id: subSchoolId } });
-    }
-    async getAllClasses(schoolId, page = 1, pageSize = 10) {
+    async addClass(schoolId, dto) {
         const school = await this.schoolRepo.findOne({ where: { id: schoolId } });
         if (!school) {
             throw new common_1.NotFoundException('School not found');
         }
-        const [classes, total] = await this.classRepo.findAndCount({
-            where: { school: { id: schoolId } },
-            skip: (page - 1) * pageSize,
-            take: pageSize,
-            relations: ['school'],
+        const existingClass = await this.classRepo.findOne({
+            where: { className: dto.className, school: { id: schoolId } },
         });
-        const formattedClass = classes.map((classEntity) => ({
-            classId: classEntity.id,
-            className: classEntity.className,
-            schoolId: classEntity.school.id,
-            schoolName: classEntity.school.schoolName,
-        }));
-        const hasNextPage = classes.length == pageSize;
-        return {
-            classes: formattedClass,
-            totalClass: total,
-            totalPage: Math.ceil(total / pageSize),
-            currentPage: page,
-            hasNextPage: hasNextPage,
-        };
+        if (existingClass) {
+            throw new common_1.ConflictException('Class already exists');
+        }
+        const newClass = this.classRepo.create(Object.assign(Object.assign({}, dto), { className: dto.className, school }));
+        return await this.classRepo.save(newClass);
     }
-    async getStudentsByClass(classId, user, page = 1, pageSize = 10) {
+    async getAllClasses(dto, schoolId) {
+        const keyword = dto.keyword || '';
+        const query = this.classRepo.createQueryBuilder('class')
+            .leftJoinAndSelect('class.school', 'school')
+            .select([
+            'class.id',
+            'class.className',
+            'school.id',
+            'school.schoolName',
+        ])
+            .where('class.schoolId = :schoolId', { schoolId });
+        if (dto.keyword) {
+            query.andWhere(new typeorm_2.Brackets((qb) => {
+                qb.where('class.className LIKE :keyword', { keyword: `%${keyword}%` });
+            }));
+        }
+        const [result, total] = await query
+            .skip(dto.offset)
+            .take(dto.limit)
+            .orderBy({ 'class.className': 'ASC' })
+            .getManyAndCount();
+        return { result, total };
+    }
+    async getClassById(classId) {
         const classEntity = await this.classRepo.findOne({
             where: { id: classId },
             relations: ['school'],
@@ -79,28 +71,43 @@ let ClassService = class ClassService {
         if (!classEntity) {
             throw new common_1.NotFoundException('Class not found');
         }
-        if (classEntity.school.status !== 'ACTIVE') {
+        return classEntity;
+    }
+    async getStudents(dto, classId, user) {
+        const classEntity = await this.classRepo.createQueryBuilder('class')
+            .leftJoinAndSelect('class.school', 'school')
+            .where('class.id = :classId', { classId })
+            .getOne();
+        if (!classEntity)
+            throw new common_1.NotFoundException('Class not found');
+        if (classEntity.school.status !== 'ACTIVE')
             throw new common_1.ForbiddenException('School is inactive');
-        }
         if (user.role === enum_1.UserRole.SUB_ADMIN && user.id !== classEntity.school.accountId) {
             throw new common_1.ForbiddenException('You do not have access to this class');
         }
-        const [students, total] = await this.studentRepo.findAndCount({
-            where: { class: { id: classId } },
-            skip: (page - 1) * pageSize,
-            take: pageSize,
-        });
-        return {
-            classId: classEntity.id,
-            className: classEntity.className,
-            schoolId: classEntity.school.id,
-            schoolName: classEntity.school.schoolName,
-            students,
-            totalStudents: total,
-            totalPage: Math.ceil(total / pageSize),
-            currentPage: page,
-            hasNextPage: students.length === pageSize,
-        };
+        const [students, total] = await this.studentRepo.createQueryBuilder('student')
+            .where('student.classId = :classId', { classId })
+            .skip(dto.offset)
+            .take(dto.limit)
+            .getManyAndCount();
+        return { result: students, total };
+    }
+    async update(classId, dto) {
+        const classEntity = await this.classRepo.findOne({ where: { id: classId } });
+        if (!classEntity)
+            throw new common_1.NotFoundException('Class not found');
+        await this.classRepo.update(classId, Object.assign({}, dto));
+        return { message: 'Class updated successfully' };
+    }
+    async remove(schoolId, classId) {
+        const classToDelete = await this.classRepo.createQueryBuilder('class')
+            .where('class.id = :classId', { classId })
+            .andWhere('class.schoolId = :schoolId', { schoolId })
+            .getOne();
+        if (!classToDelete)
+            throw new common_1.NotFoundException('Class Not Found');
+        await this.classRepo.remove(classToDelete);
+        return { message: 'Class deleted successfully' };
     }
 };
 exports.ClassService = ClassService;

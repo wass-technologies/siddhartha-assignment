@@ -1,4 +1,5 @@
-import { CreateClassDto } from './dto/create-class.dto';
+import { CreateClassDto, PaginationDto } from './dto/create-class.dto';
+import { UpdateClassDto } from './dto/update-class.dto';
 import { ClassEntity } from './entities/class.entity';
 import { Repository } from 'typeorm';
 import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
@@ -9,29 +10,20 @@ export declare class ClassService {
     private readonly schoolRepo;
     private readonly studentRepo;
     constructor(classRepo: Repository<ClassEntity>, schoolRepo: Repository<SchoolDetails>, studentRepo: Repository<Student>);
-    addClass(subSchoolId: string, dto: CreateClassDto): Promise<ClassEntity>;
-    deleteClass(subSchoolId: string, classId: string): Promise<void>;
-    getAllClasses(schoolId: string, page?: number, pageSize?: number): Promise<{
-        classes: {
-            classId: string;
-            className: string;
-            schoolId: string;
-            schoolName: string;
-        }[];
-        totalClass: number;
-        totalPage: number;
-        currentPage: number;
-        hasNextPage: boolean;
+    addClass(schoolId: string, dto: CreateClassDto): Promise<ClassEntity>;
+    getAllClasses(dto: PaginationDto, schoolId: string): Promise<{
+        result: ClassEntity[];
+        total: number;
     }>;
-    getStudentsByClass(classId: string, user: Account, page?: number, pageSize?: number): Promise<{
-        classId: string;
-        className: string;
-        schoolId: string;
-        schoolName: string;
-        students: Student[];
-        totalStudents: number;
-        totalPage: number;
-        currentPage: number;
-        hasNextPage: boolean;
+    getClassById(classId: string): Promise<ClassEntity>;
+    getStudents(dto: PaginationDto, classId: string, user: Account): Promise<{
+        result: Student[];
+        total: number;
+    }>;
+    update(classId: string, dto: UpdateClassDto): Promise<{
+        message: string;
+    }>;
+    remove(schoolId: string, classId: string): Promise<{
+        message: string;
     }>;
 }

@@ -83,6 +83,34 @@ let AuthService = class AuthService {
             }
             return result;
         };
+        this.getUserDetails = async (loginId, role) => {
+            const query = this.accountRepo
+                .createQueryBuilder('account')
+                .leftJoinAndSelect('account.schools', 'schools')
+                .leftJoinAndSelect('account.userDetail', 'userDetail')
+                .select([
+                'account.id',
+                'account.email',
+                'account.password',
+                'account.role',
+                'account.status',
+                'schools.id',
+                'schools.schoolName',
+                'schools.status',
+                'userDetail.id',
+                'userDetail.name',
+            ]);
+            if (role) {
+                query.andWhere('account.role = :role', { role });
+            }
+            const result = await query
+                .andWhere('account.email = :loginId', { loginId })
+                .getOne();
+            if (!result) {
+                throw new common_1.UnauthorizedException('Account not found!');
+            }
+            return result;
+        };
     }
     async mainAdmindminsignIn(dto) {
         const user = await this.getUserDetails(dto.email, enum_1.UserRole.MAIN_ADMIN);
@@ -137,17 +165,6 @@ let AuthService = class AuthService {
         };
         const token = await apiFeatures_utils_1.default.assignJwtToken(user.id, this.jwtService);
         return { token };
-    }
-    async getUserDetails(loginId, role) {
-        const result = await this.accountRepo.findOne({
-            where: { email: loginId, role: role },
-            select: ['id', 'email', 'password', 'role', 'status'],
-        });
-        console.log('Fetched User:', result);
-        if (!result) {
-            throw new common_1.UnauthorizedException('Account not found!');
-        }
-        return result;
     }
     async validate(id, role) {
         const user = await this.getUserDetails(id, role);

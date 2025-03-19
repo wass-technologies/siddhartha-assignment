@@ -1,3 +1,8 @@
 export declare class CreateClassDto {
-    name: string;
+    className: string;
+}
+export declare class PaginationDto {
+    limit: number;
+    offset: number;
+    keyword: string;
 }

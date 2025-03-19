@@ -112,21 +112,8 @@ export class AuthService {
     return { token };
   }
 
-// Get User Details
 
-private async getUserDetails(loginId: string, role: UserRole){
-  const result = await this.accountRepo.findOne({
-    where: { email: loginId, role: role },
-    select: ['id', 'email', 'password', 'role', 'status'],
-  });
-  console.log('Fetched User:', result); 
 
-  if (!result) {
-    throw new UnauthorizedException('Account not found!');
-  }
-
-  return result;
-}
 //Validate
 async validate(id: string, role: UserRole) {
   const user = await this.getUserDetails(id, role);
@@ -162,7 +149,6 @@ async validate(id: string, role: UserRole) {
     }
     return result;
   };
-
 
 
  //Create User
@@ -208,9 +194,6 @@ async validate(id: string, role: UserRole) {
   
 
 
-
-
-
   // Create MainAdmin
   async createMainAdmin(dto: CreateMainAdminDto) {
     const existingAdmin = await this.accountRepo.findOne({
@@ -249,6 +232,45 @@ async validate(id: string, role: UserRole) {
   async createStaff(dto:CreateUserDto, createdBy: string) {
     return this.createUser(dto, UserRole.STAFF, createdBy);
   }
+
+
+  // Get User Details
+
+private getUserDetails = async (
+  loginId: string,
+  role?: UserRole,
+): Promise<any> => {
+  const query = this.accountRepo
+    .createQueryBuilder('account')
+    .leftJoinAndSelect('account.schools', 'schools')
+    .leftJoinAndSelect('account.userDetail', 'userDetail')
+    .select([
+      'account.id',
+      'account.email',
+      'account.password',
+      'account.role',
+      'account.status',
+      'schools.id',
+      'schools.schoolName',
+      'schools.status',
+      'userDetail.id',
+      'userDetail.name',
+    ]);
+
+  if (role) {
+    query.andWhere('account.role = :role', { role });
+  }
+
+  const result = await query
+    .andWhere('account.email = :loginId', { loginId })
+    .getOne();
+
+  if (!result) {
+    throw new UnauthorizedException('Account not found!');
+  }
+
+  return result;
+};
 
 
   

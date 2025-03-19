@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const permissions_guard_1 = require("../auth/guards/permissions.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const enum_1 = require("../enum");
 const company_details_service_1 = require("./company-details.service");
@@ -62,6 +63,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('all-school'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN, enum_1.UserRole.STAFF),
+    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
@@ -122,7 +124,7 @@ __decorate([
 ], SchoolDetailsController.prototype, "generateSchoolListPdf", null);
 exports.SchoolDetailsController = SchoolDetailsController = __decorate([
     (0, common_1.Controller)('school-details'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     __metadata("design:paramtypes", [company_details_service_1.SchoolDetailsService])
 ], SchoolDetailsController);
 //# sourceMappingURL=company-details.controller.js.map

@@ -35,7 +35,7 @@ import {
 import { Response } from 'express';
 
 @Controller('school-details')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
 export class SchoolDetailsController {
   constructor(private readonly schoolService: SchoolDetailsService) {}
 
@@ -52,6 +52,7 @@ export class SchoolDetailsController {
 
   @Get('all-school')
   @Roles(UserRole.MAIN_ADMIN, UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'school_detail'])
   async findList(@Body() dto: PaginationDto) {
     return this.schoolService.findList(dto);
   }
@@ -98,16 +99,5 @@ export class SchoolDetailsController {
   async generateSchoolListPdf(@Res() res: Response) {
     return this.schoolService.generateSchoolListPdf(res);
   }
-
-
-
-
-
-
-
-
-
-
-
 
 }

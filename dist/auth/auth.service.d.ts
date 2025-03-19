@@ -27,22 +27,7 @@ export declare class AuthService {
     subAdminsignIn(dto: LoginDto): Promise<{
         token: string;
     }>;
-    private getUserDetails;
-    validate(id: string, role: UserRole): Promise<{
-        roles: UserRole[];
-        id: string;
-        name: string;
-        email: string;
-        password: string;
-        role: UserRole;
-        createdBy: string;
-        status: DefaultStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        schools: SchoolDetails[];
-        userPermission: UserPermission[];
-        userDetail: UserDetail[];
-    }>;
+    validate(id: string, role: UserRole): Promise<any>;
     findPermission(accountId: string): Promise<any>;
     private getPermissions;
     private createUser;
@@ -91,4 +76,5 @@ export declare class AuthService {
             status: DefaultStatus;
         } & UserDetail;
     }>;
+    private getUserDetails;
 }

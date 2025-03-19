@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { ClassService } from './class.service';
-import { CreateClassDto } from './dto/create-class.dto';
+import { CreateClassDto, PaginationDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -17,36 +17,54 @@ export class ClassController {
 
   @Post('add/:subschoolId')
   @Roles(UserRole.SUB_ADMIN)
-  async addClass(@Param('subschoolId')subSchoolId:string, @Body()dto:CreateClassDto,
-  @CurrentUser()user:Account){
-    
-    return await this.classService.addClass(subSchoolId,dto);
-
+  async addClass(
+    @Param('subSchoolId') subSchoolId: string,
+    @Body() dto: CreateClassDto,
+  ) {
+    return this.classService.addClass(subSchoolId, dto);
   }
 
-  @Delete(':subschoolId/:classId')
-  @Roles(UserRole.SUB_ADMIN)
-  async deleteClass(@Param('subschoolId') subSchoolId:string,@Param('classId') classId:string,@CurrentUser()user:Account){
-    return this.classService.deleteClass(subSchoolId,classId);
 
-  }
-  @Get('all/:subSchoolId')
+  @Get('all/:schoolId')
   @Roles(UserRole.SUB_ADMIN)
-  async getAllClasses(@Param('subSchoolId') subSchoolId: string, @Query('page') page: number = 1, @Query('pageSize') pageSize: number= 10,@CurrentUser()user:Account){
-    
-    return this.classService.getAllClasses(subSchoolId,page,pageSize);
-
+  async getAllClasses(@Query() dto: PaginationDto, @Param('schoolId') schoolId: string) {
+    return this.classService.getAllClasses(dto, schoolId);
   }
 
-  @Get('students/:classId')
+  @Get(':classId')
   @Roles(UserRole.SUB_ADMIN)
-  async getStudentsByClass(
+  async getClassById(@Param('classId') classId: string) {
+    return this.classService.getClassById(classId);
+  }
+
+
+
+  @Get(':classId/students')
+  @Roles(UserRole.SUB_ADMIN, UserRole.STAFF)
+  async getStudents(
+    @Query() dto: PaginationDto,
     @Param('classId') classId: string,
     @CurrentUser() user: Account,
-    @Query('page') page: number = 1,
-    @Query('pageSize') pageSize: number = 10
   ) {
-    return this.classService.getStudentsByClass(classId, user,page, pageSize);
+    return this.classService.getStudents(dto, classId, user);
+  }
+
+  @Patch(':classId')
+  @Roles(UserRole.SUB_ADMIN)
+  async updateClass(
+    @Param('classId') classId: string,
+    @Body() dto: UpdateClassDto,
+  ) {
+    return this.classService.update(classId, dto);
+  }
+
+  @Delete(':schoolId/:classId')
+  @Roles(UserRole.SUB_ADMIN)
+  async removeClass(
+    @Param('schoolId') schoolId: string,
+    @Param('classId') classId: string,
+  ) {
+    return this.classService.remove(schoolId, classId);
   }
 
   

@@ -56,8 +56,6 @@ export class AccountService {
 
 
 
- 
-
   async subAdminDetail(id: string) {
     const result = await this.repo
       .createQueryBuilder('account')
@@ -90,35 +88,4 @@ export class AccountService {
     return result;
   }
   
-
-
-  
-  
-
-  // // async userProfile(id: string) {
-  // //   const result = await this.repo
-  // //     .createQueryBuilder('account')
-  // //     .leftJoinAndSelect('account.userDetail', 'userDetail')
-  // //     .select([
-  // //       'account.id',
-  // //       'account.phoneNumber',
-  // //       'account.roles',
-  // //       'account.status',
-  // //       'account.createdAt',
-
-  // //       'userDetail.id',
-  // //       'userDetail.name',
-  // //       'userDetail.email',
-  // //       'userDetail.city',
-  // //       'userDetail.interest',
-  // //       'userDetail.wpNo',
-  // //       'userDetail.profile',
-  // //     ])
-  // //     .where('account.id = :id', { id: id })
-  // //     .getOne();
-  // //   if (!result) {
-  // //     throw new NotFoundException('Profile Not Found!');
-  // //   }
-  // //   return result;
-  // // }
 }

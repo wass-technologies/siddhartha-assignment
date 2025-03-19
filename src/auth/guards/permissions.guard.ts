@@ -8,6 +8,7 @@ import {
   AppAbility,
   CaslAbilityFactory,
 } from '../factory/casl-ability.factory';
+import { UserRole } from 'src/enum';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
@@ -23,6 +24,9 @@ export class PermissionsGuard implements CanActivate {
       ) || [];
     const req = context.switchToHttp().getRequest();
     const user = req.user;
+    if (user.role=== UserRole.MAIN_ADMIN) {
+      return true; 
+    }
     const ability = await this.abilityFactory.createForUser(user);
     return requiredPermissions.every((permission) =>
       this.isAllowed(ability, permission),

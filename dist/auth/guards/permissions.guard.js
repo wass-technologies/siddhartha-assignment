@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const permissions_decorator_1 = require("../decorators/permissions.decorator");
 const casl_ability_factory_1 = require("../factory/casl-ability.factory");
+const enum_1 = require("../../enum");
 let PermissionsGuard = class PermissionsGuard {
     constructor(reflector, abilityFactory) {
         this.reflector = reflector;
@@ -23,6 +24,9 @@ let PermissionsGuard = class PermissionsGuard {
         const requiredPermissions = this.reflector.get(permissions_decorator_1.PERMISSION_CHECKER_KEY, context.getHandler()) || [];
         const req = context.switchToHttp().getRequest();
         const user = req.user;
+        if (user.role === enum_1.UserRole.MAIN_ADMIN) {
+            return true;
+        }
         const ability = await this.abilityFactory.createForUser(user);
         return requiredPermissions.every((permission) => this.isAllowed(ability, permission));
     }
