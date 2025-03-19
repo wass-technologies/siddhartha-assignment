@@ -70,6 +70,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('by-status'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
+    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [company_detail_dto_1.PaginationSDto]),

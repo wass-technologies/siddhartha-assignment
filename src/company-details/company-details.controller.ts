@@ -58,6 +58,7 @@ export class SchoolDetailsController {
 
   @Get('by-status')
   @Roles(UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'school_detail'])
   async getSchoolsByStatus(@Body() paginationDto: PaginationSDto) {
     return this.schoolService.findListByStatus(paginationDto);
   }
