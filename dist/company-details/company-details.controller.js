@@ -15,162 +15,110 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SchoolDetailsController = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
-const account_entity_1 = require("../account/entities/account.entity");
-const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const permissions_guard_1 = require("../auth/guards/permissions.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const enum_1 = require("../enum");
 const company_details_service_1 = require("./company-details.service");
 const company_detail_dto_1 = require("./dto/company-detail.dto");
 let SchoolDetailsController = class SchoolDetailsController {
-    constructor(schoolDetailsService) {
-        this.schoolDetailsService = schoolDetailsService;
+    constructor(schoolService) {
+        this.schoolService = schoolService;
     }
-    update(user, dto) {
-        return this.schoolDetailsService.updateSchool(user.id, dto);
+    async createSchool(dto) {
+        return this.schoolService.createSchool(dto);
     }
-    removeSubAdmin(schoolId) {
-        return this.schoolDetailsService.removeSubAdmin(schoolId);
+    async findList(dto) {
+        return this.schoolService.findList(dto);
     }
-    createSchool(user, dto) {
-        return this.schoolDetailsService.createSchool(dto);
-    }
-    assignSubAdmin(schoolId, subAdminId) {
-        return this.schoolDetailsService.assignSubAdmin(schoolId, subAdminId);
-    }
-    async getAllSchools(dto) {
-        return this.schoolDetailsService.findSchools(dto);
-    }
-    status(id, dto) {
-        return this.schoolDetailsService.updateStatus(id, dto);
-    }
-    async generateSchoolListPdf(res, user) {
-        return this.schoolDetailsService.generateSchoolListPdf(res);
-    }
-    async getAllActiveSchools(paginationDto) {
-        return this.schoolDetailsService.getSchoolsByStatus(enum_1.SchoolStatus.ACTIVE, paginationDto);
-    }
-    async getAllPendingSchools(paginationDto) {
-        return this.schoolDetailsService.getSchoolsByStatus(enum_1.SchoolStatus.PENDING, paginationDto);
-    }
-    async getAllInactiveSchools(paginationDto) {
-        return this.schoolDetailsService.getSchoolsByStatus(enum_1.SchoolStatus.INACTIVE, paginationDto);
+    async getSchoolsByStatus(paginationDto) {
+        return this.schoolService.findListByStatus(paginationDto);
     }
     async findSchool(id) {
-        return await this.schoolDetailsService.findSchool(id);
+        return this.schoolService.findSchool(id);
+    }
+    async update(id, dto) {
+        return this.schoolService.update(id, dto);
+    }
+    async status(id, dto) {
+        return this.schoolService.status(id, dto);
+    }
+    async deleteSchool(id) {
+        return this.schoolService.deleteSchool(id);
+    }
+    async generateSchoolListPdf(res) {
+        return this.schoolService.generateSchoolListPdf(res);
     }
 };
 exports.SchoolDetailsController = SchoolDetailsController;
 __decorate([
-    (0, common_1.Patch)('update'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account, company_detail_dto_1.SchoolDetailDto]),
-    __metadata("design:returntype", void 0)
-], SchoolDetailsController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':schoolId/remove-sub-admin'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
-    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.UPDATE, 'school_detail']),
-    __param(0, (0, common_1.Param)('schoolId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], SchoolDetailsController.prototype, "removeSubAdmin", null);
-__decorate([
     (0, common_1.Post)('create'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account, company_detail_dto_1.SchoolDetailDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [company_detail_dto_1.SchoolDetailDto]),
+    __metadata("design:returntype", Promise)
 ], SchoolDetailsController.prototype, "createSchool", null);
 __decorate([
-    (0, common_1.Post)(':schoolId/assign-sub-admin/:subAdminId'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
-    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.UPDATE, 'school_detail']),
-    __param(0, (0, common_1.Param)('schoolId')),
-    __param(1, (0, common_1.Param)('subAdminId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", void 0)
-], SchoolDetailsController.prototype, "assignSubAdmin", null);
-__decorate([
     (0, common_1.Get)('all-school'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN, enum_1.UserRole.STAFF),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
     __metadata("design:returntype", Promise)
-], SchoolDetailsController.prototype, "getAllSchools", null);
+], SchoolDetailsController.prototype, "findList", null);
+__decorate([
+    (0, common_1.Get)('by-status'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [company_detail_dto_1.PaginationSDto]),
+    __metadata("design:returntype", Promise)
+], SchoolDetailsController.prototype, "getSchoolsByStatus", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN, enum_1.UserRole.STAFF),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], SchoolDetailsController.prototype, "findSchool", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, company_detail_dto_1.SchoolDetailDto]),
+    __metadata("design:returntype", Promise)
+], SchoolDetailsController.prototype, "update", null);
 __decorate([
     (0, common_1.Put)(':id/status'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
     (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.UPDATE, 'school_detail']),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, company_detail_dto_1.StatusDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SchoolDetailsController.prototype, "status", null);
 __decorate([
-    (0, common_1.Get)('pdf'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
-    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
-    __param(0, (0, common_1.Res)()),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, account_entity_1.Account]),
-    __metadata("design:returntype", Promise)
-], SchoolDetailsController.prototype, "generateSchoolListPdf", null);
-__decorate([
-    (0, common_1.Get)('active'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
-    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
-    __metadata("design:returntype", Promise)
-], SchoolDetailsController.prototype, "getAllActiveSchools", null);
-__decorate([
-    (0, common_1.Get)('pending'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
-    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
-    __metadata("design:returntype", Promise)
-], SchoolDetailsController.prototype, "getAllPendingSchools", null);
-__decorate([
-    (0, common_1.Get)('inactive'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
-    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
-    __metadata("design:returntype", Promise)
-], SchoolDetailsController.prototype, "getAllInactiveSchools", null);
-__decorate([
-    (0, common_1.Get)(':id'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
+    (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], SchoolDetailsController.prototype, "findSchool", null);
+], SchoolDetailsController.prototype, "deleteSchool", null);
+__decorate([
+    (0, common_1.Get)('export/pdf'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.STAFF),
+    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'school_detail']),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], SchoolDetailsController.prototype, "generateSchoolListPdf", null);
 exports.SchoolDetailsController = SchoolDetailsController = __decorate([
     (0, common_1.Controller)('school-details'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),

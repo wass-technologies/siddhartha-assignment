@@ -5,6 +5,8 @@ import {
 
   PaginationDto,
  
+  PaginationSDto,
+ 
   SchoolDetailDto,
   StatusDto,
 } from './dto/company-detail.dto';
@@ -35,98 +37,109 @@ export class SchoolDetailsService {
     const school = this.repo.create(dto);
     return this.repo.save(school);
   }
-  
 
-  //Update Details
-
-  async updateSchool(schoolId: string, dto: SchoolDetailDto) {
-    const school = await this.repo.findOne({ where: { id: schoolId } });
-    if (!school) {
-      throw new NotFoundException('School not found!');
-    }
-
-    Object.assign(school, dto);
-    return this.repo.save(school);
-  }
-
-  //Assign SubAdmin
-  async assignSubAdmin(schoolId: string, subAdminId: string) {
-    const school = await this.repo.findOne({ where: { id: schoolId }, relations: ['subAdmin'] });
-    if (!school) {
-      throw new NotFoundException('School not found!');
-    }
-
-    const subAdmin = await this.accountRepo.findOne({ where: { id: subAdminId, role: UserRole.SUB_ADMIN } });
-    if (!subAdmin) {
-      throw new NotFoundException('Sub Admin not found!');
-    }
-
-    // Remove previous Sub Admin if exists
-    if (school.subAdmin) {
-      school.subAdmin = null;
-      await this.repo.save(school);
-    }
-
-    // Assign new Sub Admin
-    school.subAdmin = subAdmin;
-    return this.repo.save(school);
-  }
-
-  
-
-  //Remove
-  async removeSubAdmin(schoolId: string) {
-    const school = await this.repo.findOne({ where: { id: schoolId }, relations: ['subAdmin'] });
-    if (!school) {
-      throw new NotFoundException('School not found!');
-    }
-
-    school.subAdmin = null;
-    return this.repo.save(school);
-  }
-
-
-
-
-   //Get Schools List
-   async findSchools(dto: PaginationDto) {
+  async findList(dto: PaginationDto) {
     const keyword = dto.keyword || '';
     const query = this.repo
-      .createQueryBuilder('school')
-      .where('school.schoolName LIKE :schoolName', { schoolName: `%${keyword}%` });
-
-    const [result, total] = await query.skip(dto.offset).take(dto.limit).orderBy({ 'school.schoolName': 'ASC' }).getManyAndCount();
+      .createQueryBuilder('schoolDetails')
+      .leftJoinAndSelect('schoolDetails.subAdmin', 'subAdmin')
+      .leftJoinAndSelect('schoolDetails.companySchedule', 'companySchedule')
+      .leftJoinAndSelect('schoolDetails.leed', 'leed')
+      .leftJoinAndSelect('schoolDetails.classes', 'classes')
+      .select([
+        'schoolDetails.id',
+        'schoolDetails.schoolName',
+        'schoolDetails.address1',
+        'schoolDetails.address2',
+        'schoolDetails.state',
+        'schoolDetails.city',
+        'schoolDetails.area',
+        'schoolDetails.pincode',
+        'schoolDetails.schoolDesc',
+        'schoolDetails.status',
+        'schoolDetails.accountId',
+        'schoolDetails.createdAt',
+        'schoolDetails.updatedAt',
+        'subAdmin.id',
+        'subAdmin.name',
+        'companySchedule.id',
+        'leed.id',
+        'classes.id',
+      ]);
+  
+    query.andWhere(
+      new Brackets((qb) => {
+        qb.where('schoolDetails.schoolName LIKE :schoolName', {
+          schoolName: '%' + keyword + '%',
+        });
+      }),
+    );
+  
+    const [result, total] = await query
+      .skip(dto.offset)
+      .take(dto.limit)
+      .orderBy({ 'schoolDetails.schoolName': 'ASC' })
+      .getManyAndCount();
+  
     return { result, total };
   }
 
-    // Fetch active or deactivated school
-    async getSchoolsByStatus(status: SchoolStatus, paginationDto: PaginationDto) {
-      const { limit, offset, keyword } = paginationDto;
+
+
+
+  async findListByStatus(dto: PaginationSDto) {
+    const keyword = dto.keyword || '';
+    const query = this.repo
+      .createQueryBuilder('schoolDetails')
+      .leftJoinAndSelect('schoolDetails.subAdmin', 'subAdmin')
+      .leftJoinAndSelect('schoolDetails.classes', 'classes')
+      .select([
+        'schoolDetails.id',
+        'schoolDetails.schoolName',
+        'schoolDetails.address1',
+        'schoolDetails.address2',
+        'schoolDetails.state',
+        'schoolDetails.city',
+        'schoolDetails.area',
+        'schoolDetails.pincode',
+        'schoolDetails.schoolDesc',
+        'schoolDetails.status',
+        'schoolDetails.accountId',
+        'schoolDetails.createdAt',
+        'schoolDetails.updatedAt',
+        'subAdmin.id',
+        'subAdmin.name',
+        'classes.id',
+      ])
+      .where('schoolDetails.status = :status', { status: dto.status });
+      if(dto.keyword){
+        query.andWhere(
+          new Brackets((qb) => {
+            qb.where('schoolDetails.schoolName LIKE :schoolName', {
+              schoolName: '%' + keyword + '%',
+            });
+          }),
+        );
+
+  }
+
+    const [result, total] = await query
+      .skip(dto.offset)
+      .take(dto.limit)
+      .orderBy({ 'schoolDetails.schoolName': 'ASC' })
+      .getManyAndCount();
+
+    return { result, total };
+  }
   
-      const whereCondition = keyword
-        ? { status, schoolName: Like(`%${keyword}%`) }
-        : { status };
-  
-      const [schools, total] = await this.repo.findAndCount({
-        where: whereCondition,
-        skip: offset,
-        take: limit,
-        order: { createdAt: 'DESC' },
-      });
-  
-      return {
-        data: schools,
-        totalSchools: total,
-        limit,
-        offset,
-      };
-    }
+
+
 
 
   async findSchool(id: string) {
     const result = await this.repo
-      .createQueryBuilder('schoolDetail')
-      .where('schoolDetail.id = :Id', { Id: id })
+      .createQueryBuilder('schoolDetails')
+      .where('schoolDetails.accountId = :accountId', { accountId: id })
       .getOne();
     if (!result) {
       throw new NotFoundException('School not found!');
@@ -134,35 +147,66 @@ export class SchoolDetailsService {
     return result;
   }
 
-//Upadate Status
-  async updateStatus(schoolId: string, dto: StatusDto) {
-    const school = await this.repo.findOne({ where: { id: schoolId } });
-    if (!school) {
+  async update(id: string, dto: SchoolDetailDto) {
+    const result = await this.repo.findOne({ where: { accountId: id } });
+    if (!result) {
       throw new NotFoundException('School not found!');
     }
+    const obj = Object.assign(result, dto);
+    return this.repo.save(obj);
+  }
+  
 
-   const obj =  Object.assign(school, dto);
+  async status(id: string, dto: StatusDto) {
+    const result = await this.repo.findOne({ where: { accountId: id } });
+    if (!result) {
+      throw new NotFoundException('School detail not found!');
+    }
+    const obj = Object.assign(result, dto);
     return this.repo.save(obj);
   }
 
-  //Pdf 
+  async deleteSchool(id: string) {
+    const result = await this.repo.findOne({ where: { accountId: id } });
+    if (!result) {
+      throw new NotFoundException('School not found!');
+    }
+    await this.repo.remove(result);
+    return { message: 'School deleted successfully!' };
+  }
 
   async generateSchoolListPdf(res: Response) {
-    const schools = await this.repo.find(); 
+    const schools = await this.repo.find();
 
     if (schools.length === 0) {
       throw new NotFoundException('No schools found');
     }
 
-    const doc = await createSchoolTable(schools); // Use the createTable function
+    const doc = await createSchoolTable(schools);
 
-    // Set response headers for PDF download
     res.setHeader('Content-Disposition', 'attachment; filename="schools_list.pdf"');
     res.setHeader('Content-Type', 'application/pdf');
 
-    doc.pipe(res); // Pipe PDF directly to response
-    doc.end(); // Finalize PDF
+    doc.pipe(res);
+    doc.end();
   }
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

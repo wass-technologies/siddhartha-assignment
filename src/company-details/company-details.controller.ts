@@ -28,6 +28,7 @@ import { PermissionAction, SchoolStatus, UserRole } from 'src/enum';
 import { SchoolDetailsService } from './company-details.service';
 import {
   PaginationDto,
+  PaginationSDto,
   SchoolDetailDto,
   StatusDto,
 } from './dto/company-detail.dto';
@@ -36,148 +37,68 @@ import { Response } from 'express';
 @Controller('school-details')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class SchoolDetailsController {
-  constructor(private readonly schoolDetailsService: SchoolDetailsService) {}
-//Update School
-  @Patch('update')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.STAFF)
-  update(@CurrentUser() user: Account, @Body() dto: SchoolDetailDto) {
-    return this.schoolDetailsService.updateSchool(user.id, dto);
-  }
-
-  // @Put('profile')
-  // @UseGuards(AuthGuard('jwt'), RolesGuard)
-  // @Roles(UserRole.STAFF)
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: './uploads/companyDetail/profile',
-  //       filename: (req, file, callback) => {
-  //         const randomName = Array(32)
-  //           .fill(null)
-  //           .map(() => Math.round(Math.random() * 16).toString(16))
-  //           .join('');
-  //         return callback(null, `${randomName}${extname(file.originalname)}`);
-  //       },
-  //     }),
-  //   }),
-  // )
-  // async profileImage(
-  //   @CurrentUser() user: Account,
-  //   @UploadedFile(
-  //     new ParseFilePipe({
-  //       validators: [
-  //         new FileTypeValidator({ fileType: '.(png|jpeg|jpg)' }),
-  //         new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 1 }),
-  //       ],
-  //     }),
-  //   )
-  //   file: Express.Multer.File,
-  // ) {
-  //   const fileData = await this.companyDetailsService.findCompany(user.id);
-  //   return this.companyDetailsService.profileImage(file.path, fileData);
-  // }
-
-// delete SubAdmin
-  @Delete(':schoolId/remove-sub-admin')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
-  @Roles(UserRole.MAIN_ADMIN)
-  @CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
-  removeSubAdmin(@Param('schoolId') schoolId: string) {
-    return this.schoolDetailsService.removeSubAdmin(schoolId);
-  }
+  constructor(private readonly schoolService: SchoolDetailsService) {}
 
 
-  //Create School
+  //Create
 
   @Post('create')
   @Roles(UserRole.MAIN_ADMIN)
-  createSchool(@CurrentUser() user: Account,@Body() dto: SchoolDetailDto) {
-    return this.schoolDetailsService.createSchool(dto);
+  async createSchool(@Body() dto: SchoolDetailDto) {
+    return this.schoolService.createSchool(dto);
   }
 
+  //Read 
 
-  //Assign Admin
+  @Get('all-school')
+  @Roles(UserRole.MAIN_ADMIN, UserRole.STAFF)
+  async findList(@Body() dto: PaginationDto) {
+    return this.schoolService.findList(dto);
+  }
 
-  @Post(':schoolId/assign-sub-admin/:subAdminId')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
+  @Get('by-status')
+  @Roles(UserRole.STAFF)
+  async getSchoolsByStatus(@Body() paginationDto: PaginationSDto) {
+    return this.schoolService.findListByStatus(paginationDto);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.SUB_ADMIN, UserRole.STAFF)
+  async findSchool(@Param('id') id: string) {
+    return this.schoolService.findSchool(id);
+  }
+
+  // Update 
+  @Put(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async update(@Param('id') id: string, @Body() dto: SchoolDetailDto) {
+    return this.schoolService.update(id, dto);
+  }
+
+  @Put(':id/status')
   @Roles(UserRole.MAIN_ADMIN)
   @CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
-  assignSubAdmin(@Param('schoolId') schoolId: string, @Param('subAdminId') subAdminId: string) {
-    return this.schoolDetailsService.assignSubAdmin(schoolId, subAdminId);
- }
-
-
-
-
-//Get Schools
-
-@Get('all-school')
-@Roles(UserRole.MAIN_ADMIN)
-async getAllSchools(@Body() dto: PaginationDto)
-{
-  return this.schoolDetailsService.findSchools(dto);
-}
-
-
-
-
- // Status
- @Put(':id/status')
-//  @ApiOperation({ summary: 'For Admin' })
- @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
- @Roles(UserRole.MAIN_ADMIN)
-@CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
- status(@Param('id') id: string, @Body() dto: StatusDto) {
-   return this.schoolDetailsService.updateStatus(id, dto);
- }
-
-
-@Get('pdf')
-@UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
-@Roles(UserRole.STAFF)
-@CheckPermissions([PermissionAction.READ, 'school_detail'])
-async generateSchoolListPdf(@Res() res: Response, @CurrentUser() user: Account) {
-  
-  return this.schoolDetailsService.generateSchoolListPdf(res);
-}
-
-// Get All Active Schools
-@Get('active')
-@UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
-@Roles(UserRole.STAFF)
-@CheckPermissions([PermissionAction.READ, 'school_detail'])
-async getAllActiveSchools(@Query() paginationDto: PaginationDto) {
-  return this.schoolDetailsService.getSchoolsByStatus(SchoolStatus.ACTIVE, paginationDto);
-  }
- // Get All Deactivated Schools
-@Get('pending')
-@UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
-@Roles(UserRole.STAFF)
-@CheckPermissions([PermissionAction.READ, 'school_detail'])
-async getAllPendingSchools(@Query() paginationDto: PaginationDto) {
-  return this.schoolDetailsService.getSchoolsByStatus(SchoolStatus.PENDING, paginationDto);
+  async status(@Param('id') id: string, @Body() dto: StatusDto) {
+    return this.schoolService.status(id, dto);
   }
 
- // Get All Deactivated Schools
- @Get('inactive')
- @UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
- @Roles(UserRole.STAFF)
- @CheckPermissions([PermissionAction.READ, 'school_detail'])
- async getAllInactiveSchools(@Query() paginationDto: PaginationDto) {
-   return this.schoolDetailsService.getSchoolsByStatus(SchoolStatus.INACTIVE, paginationDto);
-   }
+  // Delete
+
+  @Delete(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async deleteSchool(@Param('id') id: string) {
+    return this.schoolService.deleteSchool(id);
+  }
+
+  // Export
+  @Get('export/pdf')
+  @Roles(UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'school_detail'])
+  async generateSchoolListPdf(@Res() res: Response) {
+    return this.schoolService.generateSchoolListPdf(res);
+  }
 
 
-
-
-
-
- @Get(':id')
-@Roles(UserRole.SUB_ADMIN)
-async findSchool(@Param('id') id: string) {
-  return await this.schoolDetailsService.findSchool(id);
-}
 
 
 

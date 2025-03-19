@@ -18,7 +18,6 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const company_detail_entity_1 = require("./entities/company-detail.entity");
 const account_entity_1 = require("../account/entities/account.entity");
-const enum_1 = require("../enum");
 const createSchoolTable_utils_1 = require("../utils/createSchoolTable.utils");
 let SchoolDetailsService = class SchoolDetailsService {
     constructor(repo, accountRepo) {
@@ -33,81 +32,118 @@ let SchoolDetailsService = class SchoolDetailsService {
         const school = this.repo.create(dto);
         return this.repo.save(school);
     }
-    async updateSchool(schoolId, dto) {
-        const school = await this.repo.findOne({ where: { id: schoolId } });
-        if (!school) {
-            throw new common_1.NotFoundException('School not found!');
-        }
-        Object.assign(school, dto);
-        return this.repo.save(school);
-    }
-    async assignSubAdmin(schoolId, subAdminId) {
-        const school = await this.repo.findOne({ where: { id: schoolId }, relations: ['subAdmin'] });
-        if (!school) {
-            throw new common_1.NotFoundException('School not found!');
-        }
-        const subAdmin = await this.accountRepo.findOne({ where: { id: subAdminId, role: enum_1.UserRole.SUB_ADMIN } });
-        if (!subAdmin) {
-            throw new common_1.NotFoundException('Sub Admin not found!');
-        }
-        if (school.subAdmin) {
-            school.subAdmin = null;
-            await this.repo.save(school);
-        }
-        school.subAdmin = subAdmin;
-        return this.repo.save(school);
-    }
-    async removeSubAdmin(schoolId) {
-        const school = await this.repo.findOne({ where: { id: schoolId }, relations: ['subAdmin'] });
-        if (!school) {
-            throw new common_1.NotFoundException('School not found!');
-        }
-        school.subAdmin = null;
-        return this.repo.save(school);
-    }
-    async findSchools(dto) {
+    async findList(dto) {
         const keyword = dto.keyword || '';
         const query = this.repo
-            .createQueryBuilder('school')
-            .where('school.schoolName LIKE :schoolName', { schoolName: `%${keyword}%` });
-        const [result, total] = await query.skip(dto.offset).take(dto.limit).orderBy({ 'school.schoolName': 'ASC' }).getManyAndCount();
+            .createQueryBuilder('schoolDetails')
+            .leftJoinAndSelect('schoolDetails.subAdmin', 'subAdmin')
+            .leftJoinAndSelect('schoolDetails.companySchedule', 'companySchedule')
+            .leftJoinAndSelect('schoolDetails.leed', 'leed')
+            .leftJoinAndSelect('schoolDetails.classes', 'classes')
+            .select([
+            'schoolDetails.id',
+            'schoolDetails.schoolName',
+            'schoolDetails.address1',
+            'schoolDetails.address2',
+            'schoolDetails.state',
+            'schoolDetails.city',
+            'schoolDetails.area',
+            'schoolDetails.pincode',
+            'schoolDetails.schoolDesc',
+            'schoolDetails.status',
+            'schoolDetails.accountId',
+            'schoolDetails.createdAt',
+            'schoolDetails.updatedAt',
+            'subAdmin.id',
+            'subAdmin.name',
+            'companySchedule.id',
+            'leed.id',
+            'classes.id',
+        ]);
+        query.andWhere(new typeorm_2.Brackets((qb) => {
+            qb.where('schoolDetails.schoolName LIKE :schoolName', {
+                schoolName: '%' + keyword + '%',
+            });
+        }));
+        const [result, total] = await query
+            .skip(dto.offset)
+            .take(dto.limit)
+            .orderBy({ 'schoolDetails.schoolName': 'ASC' })
+            .getManyAndCount();
         return { result, total };
     }
-    async getSchoolsByStatus(status, paginationDto) {
-        const { limit, offset, keyword } = paginationDto;
-        const whereCondition = keyword
-            ? { status, schoolName: (0, typeorm_2.Like)(`%${keyword}%`) }
-            : { status };
-        const [schools, total] = await this.repo.findAndCount({
-            where: whereCondition,
-            skip: offset,
-            take: limit,
-            order: { createdAt: 'DESC' },
-        });
-        return {
-            data: schools,
-            totalSchools: total,
-            limit,
-            offset,
-        };
+    async findListByStatus(dto) {
+        const keyword = dto.keyword || '';
+        const query = this.repo
+            .createQueryBuilder('schoolDetails')
+            .leftJoinAndSelect('schoolDetails.subAdmin', 'subAdmin')
+            .leftJoinAndSelect('schoolDetails.classes', 'classes')
+            .select([
+            'schoolDetails.id',
+            'schoolDetails.schoolName',
+            'schoolDetails.address1',
+            'schoolDetails.address2',
+            'schoolDetails.state',
+            'schoolDetails.city',
+            'schoolDetails.area',
+            'schoolDetails.pincode',
+            'schoolDetails.schoolDesc',
+            'schoolDetails.status',
+            'schoolDetails.accountId',
+            'schoolDetails.createdAt',
+            'schoolDetails.updatedAt',
+            'subAdmin.id',
+            'subAdmin.name',
+            'classes.id',
+        ])
+            .where('schoolDetails.status = :status', { status: dto.status });
+        if (dto.keyword) {
+            query.andWhere(new typeorm_2.Brackets((qb) => {
+                qb.where('schoolDetails.schoolName LIKE :schoolName', {
+                    schoolName: '%' + keyword + '%',
+                });
+            }));
+        }
+        const [result, total] = await query
+            .skip(dto.offset)
+            .take(dto.limit)
+            .orderBy({ 'schoolDetails.schoolName': 'ASC' })
+            .getManyAndCount();
+        return { result, total };
     }
     async findSchool(id) {
         const result = await this.repo
-            .createQueryBuilder('schoolDetail')
-            .where('schoolDetail.id = :Id', { Id: id })
+            .createQueryBuilder('schoolDetails')
+            .where('schoolDetails.accountId = :accountId', { accountId: id })
             .getOne();
         if (!result) {
             throw new common_1.NotFoundException('School not found!');
         }
         return result;
     }
-    async updateStatus(schoolId, dto) {
-        const school = await this.repo.findOne({ where: { id: schoolId } });
-        if (!school) {
+    async update(id, dto) {
+        const result = await this.repo.findOne({ where: { accountId: id } });
+        if (!result) {
             throw new common_1.NotFoundException('School not found!');
         }
-        const obj = Object.assign(school, dto);
+        const obj = Object.assign(result, dto);
         return this.repo.save(obj);
+    }
+    async status(id, dto) {
+        const result = await this.repo.findOne({ where: { accountId: id } });
+        if (!result) {
+            throw new common_1.NotFoundException('School detail not found!');
+        }
+        const obj = Object.assign(result, dto);
+        return this.repo.save(obj);
+    }
+    async deleteSchool(id) {
+        const result = await this.repo.findOne({ where: { accountId: id } });
+        if (!result) {
+            throw new common_1.NotFoundException('School not found!');
+        }
+        await this.repo.remove(result);
+        return { message: 'School deleted successfully!' };
     }
     async generateSchoolListPdf(res) {
         const schools = await this.repo.find();
