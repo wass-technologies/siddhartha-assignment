@@ -56,7 +56,7 @@ __decorate([
 ], StudentController.prototype, "addStudent", null);
 __decorate([
     (0, common_1.Get)('all-student'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
@@ -72,7 +72,7 @@ __decorate([
 ], StudentController.prototype, "deleteStudent", null);
 __decorate([
     (0, common_1.Get)(':studentId'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN, enum_1.UserRole.MAIN_ADMIN),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
     __param(0, (0, common_1.Param)('studentId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

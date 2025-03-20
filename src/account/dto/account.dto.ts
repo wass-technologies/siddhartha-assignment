@@ -50,3 +50,10 @@ export class CreateSubAdminDto {
   password: string;
 }
 
+export class CreateAccountDto {
+  password: string;
+  name: string;
+  email: string;
+  dob: string;
+}
+

@@ -51,45 +51,6 @@ export class StudentService {
 
 
 
-  async updateStudent(schoolName:string,classId:string, dto:UpdateStudentDto,id: string, subAdmin:string ) {
-    const subSchool = await this.schoolRepo.findOne({where:{schoolName: schoolName},
-    });
-    if(!subSchool){
-      throw new NotFoundException('Sub School not found');
-    }
-    if(subSchool.accountId!= subAdmin){
-      throw new NotFoundException('You are not authorized');
-
-    }
-    if (subSchool.status=== SchoolStatus.INACTIVE){
-      throw new ForbiddenException('School is not Active');
-    }
-    const classEntity = await this.classRepo.findOne({where:{id: classId, school:{schoolName:schoolName}},
-    relations:['subSchool']});
-
-    if(!classEntity){
-      throw new NotFoundException('Class not found');
-    }
-
-    const student = await this.studentrepo.findOne({
-      where: { id:id, class: { id: classId } },
-      relations: ['class'],
-    });
-  
-    if (!student) {
-      throw new NotFoundException('Student not found');
-    }
-    
-  if (dto.age) student.age = dto.age;
-  if (dto.gender) student.gender = dto.gender;
-  if (dto.address) student.address = dto.address;
- 
-
-
-    
-
-    return await this.studentrepo.save(student);
-  }
 
 
 
@@ -135,6 +96,63 @@ export class StudentService {
     return { result, total };
   }
 
+  async getStudentById(studentId: string) {
+    const student = await this.studentrepo
+      .createQueryBuilder('student')
+      .where('student.id = :studentId', { studentId })
+      .getOne();
+  
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+  
+    return student;
+  }
+  
+
+
+
+  async updateStudent(schoolName:string,classId:string, dto:UpdateStudentDto,id: string, subAdmin:string ) {
+    const subSchool = await this.schoolRepo.findOne({where:{schoolName: schoolName},
+    });
+    if(!subSchool){
+      throw new NotFoundException('Sub School not found');
+    }
+    if(subSchool.accountId!= subAdmin){
+      throw new NotFoundException('You are not authorized');
+
+    }
+    if (subSchool.status=== SchoolStatus.INACTIVE){
+      throw new ForbiddenException('School is not Active');
+    }
+    const classEntity = await this.classRepo.findOne({where:{id: classId, school:{schoolName:schoolName}},
+    relations:['subSchool']});
+
+    if(!classEntity){
+      throw new NotFoundException('Class not found');
+    }
+
+    const student = await this.studentrepo.findOne({
+      where: { id:id, class: { id: classId } },
+      relations: ['class'],
+    });
+  
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+    
+  if (dto.age) student.age = dto.age;
+  if (dto.gender) student.gender = dto.gender;
+  if (dto.address) student.address = dto.address;
+ 
+
+
+    
+
+    return await this.studentrepo.save(student);
+  }
+
+
 
 
   
@@ -144,16 +162,7 @@ export class StudentService {
     return { message: 'Student deleted successfully' };
   }
 
-  async getStudentById(studentId: string) {
 
-
-    const student =  await this.studentrepo.findOne({ where: { id: studentId } });
-    if(!student){
-      throw new NotFoundException('Student not found')
-    }
-    return student;
-    
-  }
   
 
 

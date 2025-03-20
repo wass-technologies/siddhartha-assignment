@@ -46,6 +46,45 @@ let StudentService = class StudentService {
         const newstudent = this.studentrepo.create(Object.assign(Object.assign({}, dto), { class: classEntity, studentName: dto.name }));
         return await this.studentrepo.save(newstudent);
     }
+    async getAllStudents(dto) {
+        const keyword = dto.keyword || '';
+        const [result, total] = await this.studentrepo
+            .createQueryBuilder('student')
+            .leftJoinAndSelect('student.class', 'class')
+            .leftJoinAndSelect('class.school', 'school')
+            .select([
+            'student.id',
+            'student.studentName',
+            'student.age',
+            'student.address',
+            'school.id',
+            'school.schoolName',
+            'class.id',
+            'class.className',
+        ])
+            .where(new typeorm_2.Brackets((qb) => {
+            qb.where('student.studentName LIKE :name OR school.schoolName LIKE :school OR class.className LIKE :class', {
+                name: '%' + keyword + '%',
+                school: '%' + keyword + '%',
+                class: '%' + keyword + '%',
+            });
+        }))
+            .orderBy({ 'school.schoolName': 'ASC', 'class.className': 'ASC' })
+            .skip(dto.offset)
+            .take(dto.limit)
+            .getManyAndCount();
+        return { result, total };
+    }
+    async getStudentById(studentId) {
+        const student = await this.studentrepo
+            .createQueryBuilder('student')
+            .where('student.id = :studentId', { studentId })
+            .getOne();
+        if (!student) {
+            throw new common_1.NotFoundException('Student not found');
+        }
+        return student;
+    }
     async updateStudent(schoolName, classId, dto, id, subAdmin) {
         const subSchool = await this.schoolRepo.findOne({ where: { schoolName: schoolName },
         });
@@ -78,45 +117,9 @@ let StudentService = class StudentService {
             student.address = dto.address;
         return await this.studentrepo.save(student);
     }
-    async getAllStudents(dto) {
-        const keyword = dto.keyword || '';
-        const [result, total] = await this.studentrepo
-            .createQueryBuilder('student')
-            .leftJoinAndSelect('student.class', 'class')
-            .leftJoinAndSelect('class.school', 'school')
-            .select([
-            'student.id',
-            'student.studentName',
-            'student.age',
-            'student.address',
-            'school.id',
-            'school.schoolName',
-            'class.id',
-            'class.className',
-        ])
-            .where(new typeorm_2.Brackets((qb) => {
-            qb.where('student.studentName LIKE :name OR school.schoolName LIKE :school OR class.className LIKE :class', {
-                name: '%' + keyword + '%',
-                school: '%' + keyword + '%',
-                class: '%' + keyword + '%',
-            });
-        }))
-            .orderBy({ 'school.schoolName': 'ASC', 'class.className': 'ASC' })
-            .skip(dto.offset)
-            .take(dto.limit)
-            .getManyAndCount();
-        return { result, total };
-    }
     async deleteStudent(studentId) {
         await this.studentrepo.delete(studentId);
         return { message: 'Student deleted successfully' };
-    }
-    async getStudentById(studentId) {
-        const student = await this.studentrepo.findOne({ where: { id: studentId } });
-        if (!student) {
-            throw new common_1.NotFoundException('Student not found');
-        }
-        return student;
     }
 };
 exports.StudentService = StudentService;

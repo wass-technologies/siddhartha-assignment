@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SchoolStatus } from 'src/enum';
+import { SchoolStatus, UserRole } from 'src/enum';
 import { Brackets, Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 import { Account } from './entities/account.entity';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
+import { CreateAccountDto } from './dto/account.dto';
 
 
 @Injectable()
@@ -13,6 +15,33 @@ export class AccountService {
     @InjectRepository(Account) private readonly repo: Repository<Account>,
     
   ) {}
+
+
+  async create(dto: CreateAccountDto, createdBy: string) {
+    const user = await this.repo.findOne({
+      where: { email: dto.email, role: UserRole.STAFF },
+    });
+    if (user) {
+      throw new ConflictException('Login id already exists!');
+    }
+
+    const encryptedPassword = await bcrypt.hash(dto.password, 13);
+    const obj = Object.assign({
+      email: dto.email,
+      password: encryptedPassword,
+      createdBy,
+      role: UserRole.STAFF,
+    });
+    const payload = await this.repo.save(obj);
+    const object = Object.assign({
+      name: dto.name,
+      email: dto.email,
+      dob: dto.dob,
+      accountId: payload.id,
+    });
+    await this.staffRepo.save(object);
+    return payload;
+  }
 
   async findAllSubAdmins(dto: PaginationDto) {
     const keyword = dto.keyword || '';

@@ -41,6 +41,7 @@ import { CallHistoryModule } from './call-history/call-history.module';
 import { BannerCategoryModule } from './banner-category/banner-category.module';
 import { ClassModule } from './class/class.module';
 import { StudentModule } from './student/student.module';
+import { StaffDetailsModule } from './staff-details/staff-details.module';
 
 @Module({
   imports: [
@@ -97,6 +98,7 @@ import { StudentModule } from './student/student.module';
     BannerCategoryModule,
     ClassModule,
     StudentModule,
+    StaffDetailsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

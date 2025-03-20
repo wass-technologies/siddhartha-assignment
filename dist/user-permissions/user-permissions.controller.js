@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const permissions_guard_1 = require("../auth/guards/permissions.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const enum_1 = require("../enum");
 const permission_dto_1 = require("./dto/permission.dto");
@@ -31,7 +32,7 @@ let UserPermissionsController = class UserPermissionsController {
             menuItem.userPermission.forEach((permItem) => {
                 obj.push({
                     id: permItem.id,
-                    rootAccountId: permItem.accountId,
+                    accountId: permItem.accountId,
                     menuId: menuItem.id,
                     permissionId: permItem.permission.id,
                     status: permItem.status,
@@ -45,7 +46,7 @@ let UserPermissionsController = class UserPermissionsController {
 exports.UserPermissionsController = UserPermissionsController;
 __decorate([
     (0, common_1.Put)(':id'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, roles_decorator_1.Roles)(...Object.values(enum_1.UserRole)),
     (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.UPDATE, 'user_permission']),
     __param(0, (0, common_1.Param)('id')),

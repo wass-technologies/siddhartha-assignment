@@ -13,10 +13,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Cache } from 'cache-manager';
 import { Account } from 'src/account/entities/account.entity';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+
 import { DefaultStatus, LogType, LoginType, UserRole } from 'src/enum';
 import { LoginHistory } from 'src/login-history/entities/login-history.entity';
-import { UserDetail } from 'src/user-details/entities/user-detail.entity';
 import { UserPermission } from 'src/user-permissions/entities/user-permission.entity';
 import APIFeatures from 'src/utils/apiFeatures.utils';
 import { Repository } from 'typeorm';
@@ -34,12 +33,9 @@ export class AuthService {
     private readonly logRepo: Repository<LoginHistory>,
     @InjectRepository(UserPermission)
     private readonly upRepo: Repository<UserPermission>,
-    @InjectRepository(SchoolDetails)
-    private readonly companyDetailRepo: Repository<SchoolDetails>,
+
     @InjectRepository(UserPermission)
     private readonly userpermissionRepo: Repository<UserPermission>,
-    @InjectRepository(UserDetail)
-    private readonly userDetailRepo: Repository<UserDetail>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     
     
@@ -149,90 +145,7 @@ async validate(id: string, role: UserRole) {
     }
     return result;
   };
-
-
- //Create User
-
-  private async createUser(
-    createUserDto: CreateUserDto,
-    role: UserRole,
-    createdBy?: string,
-  ) {
-    if (!createUserDto.password) {
-      throw new BadRequestException('Password is required');
-    }
   
-    const existingAccount = await this.accountRepo.findOne({
-      where: { email: createUserDto.email },
-    });
-  
-    if (existingAccount) {
-      throw new ForbiddenException('Email already exists');
-    }
-  
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-  
-    const account = await this.accountRepo.save({
-      email: createUserDto.email,
-      name:createUserDto.name,
-      password: hashedPassword,
-      role,
-      createdBy,
-      status: DefaultStatus.ACTIVE,
-    });
-  
-    const userDetail = await this.userDetailRepo.save({
-      email: createUserDto.email,
-      name: createUserDto.name,
-      accountId: account.id,
-      assignedByAdminId: createdBy,
-      status: DefaultStatus.ACTIVE,
-    });
-  
-    return { account, userDetail };
-  }
-  
-
-
-  // Create MainAdmin
-  async createMainAdmin(dto: CreateMainAdminDto) {
-    const existingAdmin = await this.accountRepo.findOne({
-      where: { role: UserRole.MAIN_ADMIN },
-    });
-
-    if (existingAdmin) {
-      throw new ForbiddenException('Main admin already exists');
-    }
-
-    return this.createUser(dto, UserRole.MAIN_ADMIN);
-  }
-  
-//subadmin
-  async createSubAdmin(dto: CreateSubAdminDto, createdBy: string,) {
-  
-    const school = await this.companyDetailRepo.findOne({ where: { id: dto.schoolId } });
-    if (!school) {
-      throw new NotFoundException('School not found!');
-    }
-  
-    if (school.subAdmin) {
-      await this.accountRepo.delete(school.subAdmin.id);
-    }
-  
-    const { account } = await this.createUser(dto, UserRole.SUB_ADMIN, createdBy);
- 
-    school.subAdmin = account;
-    school.accountId = account.id;
-    await this.companyDetailRepo.save(school);
-    
-  
-    return { message: 'Sub Admin assigned to the school', account };
-  }
-
-  async createStaff(dto:CreateUserDto, createdBy: string) {
-    return this.createUser(dto, UserRole.STAFF, createdBy);
-  }
-
 
   // Get User Details
 

@@ -6,6 +6,7 @@ import { CompanySchedule } from 'src/company-schedule/entities/company-schedule.
 import { CompanySubCategory } from 'src/company-sub-category/entities/company-sub-category.entity';
 import { SchoolStatus } from 'src/enum';
 import { Leed } from 'src/leed/entities/leed.entity';
+import { School } from 'src/user-details/entities/user-detail.entity';
 
 import {
   Column,
@@ -17,67 +18,25 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+
 @Entity()
-export class SchoolDetails {
+export class SubAdmin {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'int', nullable: true })
-  profileId: number;
+  @Column()
+  name: string;
 
+  @Column({ unique: true })
+  email: string;
 
+  @ManyToOne(() => Account, (account) => account.subAdmins)
+  account: Account;
 
-  @Column({ type: 'varchar', length: 55, nullable: true })
-  schoolName: string;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  address1: string;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  address2: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  state: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  city: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  area: string;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  pincode: string;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  schoolDesc: string;
-
- 
-  @Column({ type: 'enum', enum: SchoolStatus, default: SchoolStatus.PENDING })
-  status: SchoolStatus;
-
-  @Column({ type: 'uuid', nullable: true })
-  accountId: string;
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @ManyToOne(() => Account, (account) => account.schools, { nullable: true, onDelete: 'SET NULL' })
-  subAdmin: Account;
-
-  @OneToMany(
-    () => CompanySchedule,
-    (companySchedule) => companySchedule.companyDetail,
-  )
-  companySchedule: CompanySchedule[];
-
-
-
-  @OneToMany(() => Leed, (leed) => leed.companyDetail)
-  leed: Leed[];
-  @OneToMany(() => ClassEntity, (classEntity) => classEntity.school)
-  classes: ClassEntity[];
-
+  @ManyToOne(() => School, (school) => school.subAdmins)
+  school: School;
 }
+
+
+
+

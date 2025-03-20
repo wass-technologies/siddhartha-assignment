@@ -15,7 +15,7 @@ export class UserPermissionsController {
   ) {}
 
   @Put(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard, )  //PermissionsGuard
+  @UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard )  
  @Roles(...Object.values(UserRole))
  @CheckPermissions([PermissionAction.UPDATE, 'user_permission'])
   async update(@Param('id') id: string, @Body() dto: UpdatePermissionDto) {
@@ -24,7 +24,7 @@ export class UserPermissionsController {
       menuItem.userPermission.forEach((permItem) => {
         obj.push({
           id: permItem.id,
-          rootAccountId: permItem.accountId,
+          accountId: permItem.accountId,
           menuId: menuItem.id,
           permissionId: permItem.permission.id,
           status: permItem.status,

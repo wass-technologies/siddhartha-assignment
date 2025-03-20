@@ -30,7 +30,7 @@ export class StudentController {
   }
 
   @Get('all-student')
-  @Roles(UserRole.MAIN_ADMIN)
+  @Roles(UserRole.SUB_ADMIN)
   async getAllStudent(@Body()dto:PaginationDto){
     return this.studentService.getAllStudents(dto);
 
@@ -45,7 +45,7 @@ export class StudentController {
   
     // Get Student by ID
     @Get(':studentId')
-    @Roles(UserRole.SUB_ADMIN, UserRole.MAIN_ADMIN)
+    @Roles(UserRole.MAIN_ADMIN)
     async getStudentById(@Param('studentId') studentId: string) {
       return this.studentService.getStudentById(studentId);
     }

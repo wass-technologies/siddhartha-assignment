@@ -11,13 +11,13 @@ export declare class StudentService {
     private readonly schoolRepo;
     constructor(studentrepo: Repository<Student>, classRepo: Repository<ClassEntity>, schoolRepo: Repository<SchoolDetails>);
     addStudent(schoolId: string, classId: string, dto: CreateStudentDto, subAdmin: string): Promise<Student>;
-    updateStudent(schoolName: string, classId: string, dto: UpdateStudentDto, id: string, subAdmin: string): Promise<Student>;
     getAllStudents(dto: PaginationDto): Promise<{
         result: Student[];
         total: number;
     }>;
+    getStudentById(studentId: string): Promise<Student>;
+    updateStudent(schoolName: string, classId: string, dto: UpdateStudentDto, id: string, subAdmin: string): Promise<Student>;
     deleteStudent(studentId: string): Promise<{
         message: string;
     }>;
-    getStudentById(studentId: string): Promise<Student>;
 }
