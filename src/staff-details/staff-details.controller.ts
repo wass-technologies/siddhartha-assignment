@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { StaffDetailsService } from './staff-details.service';
 import { CreateStaffDetailDto } from './dto/create-staff-detail.dto';
 import { UpdateStaffDetailDto } from './dto/update-staff-detail.dto';
@@ -7,28 +7,16 @@ import { UpdateStaffDetailDto } from './dto/update-staff-detail.dto';
 export class StaffDetailsController {
   constructor(private readonly staffDetailsService: StaffDetailsService) {}
 
-  @Post()
-  create(@Body() createStaffDetailDto: CreateStaffDetailDto) {
-    return this.staffDetailsService.create(createStaffDetailDto);
-  }
 
-  @Get()
-  findAll() {
-    return this.staffDetailsService.findAll();
-  }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.staffDetailsService.findOne(+id);
-  }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStaffDetailDto: UpdateStaffDetailDto) {
-    return this.staffDetailsService.update(+id, updateStaffDetailDto);
-  }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.staffDetailsService.remove(+id);
+  async deleteStaff(@Param() id: string) {
+    const deleted = await this.staffDetailsService.deleteStaff(id);
+    if (!deleted) {
+      throw new NotFoundException(`Staff with ID ${id} not found`);
+    }
+    return { message: 'Staff deleted successfully' };
   }
 }

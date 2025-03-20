@@ -4,6 +4,7 @@ export declare class SubAdmin {
     id: string;
     name: string;
     email: string;
+    accountId: string;
     account: Account;
     school: School;
 }

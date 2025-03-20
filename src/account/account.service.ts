@@ -25,8 +25,9 @@ export class AccountService {
 
 
   async create(dto: CreateAccountDto, createdBy: string) {
+    
     const user = await this.repo.findOne({
-      where: { email: dto.email},
+      where: { email: dto.email, role: dto.role},
     });
     if (user) {
       throw new ConflictException('email id already exists!');
@@ -60,7 +61,6 @@ export class AccountService {
       entityObject = Object.assign({
         name: dto.name,
         email: dto.email,
-        dob: dto.dob,
         accountId: payload.id,
       });
 

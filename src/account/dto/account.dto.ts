@@ -1,46 +1,7 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { UserRole } from 'src/enum';
 
-export class CreateMainAdminDto {
-  @IsEmail()
-  email: string;
 
-  @IsNotEmpty({ message: 'Password cannot be empty' })
-  @MinLength(6, { message: 'Password must be at least 6 characters' })
-  password: string;
-
-  @IsNotEmpty()
-  name: string;
-}
-
-export class CreateSubAdminDto {
-  @IsEmail()
-  email: string;
-
-  @IsNotEmpty({ message: 'Password cannot be empty' })
-  @MinLength(6, { message: 'Password must be at least 6 characters' })
-  password: string;
-
-  @IsNotEmpty()
-  name: string;
-
-  @IsNotEmpty()
-  schoolId: string;
- }
-
- 
-
- export class CreateUserDto {
-   @IsEmail()
-   email: string;
- 
-   @IsNotEmpty({ message: 'Password cannot be empty' })
-   @MinLength(6, { message: 'Password must be at least 6 characters' })
-   password: string;
- 
-   @IsNotEmpty()
-   name: string;
- }
 
  export class LoginDto {
   @IsEmail()
@@ -52,10 +13,16 @@ export class CreateSubAdminDto {
 }
 
 export class CreateAccountDto {
-  password: string;
-  name: string;
+  @IsEmail()
   email: string;
-  dob: string;
+
+  @IsNotEmpty({ message: 'Password cannot be empty' })
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  password: string;
+  @IsString()
+  name:string;
+
+  @IsEnum(UserRole)
   role:UserRole;
 }
 

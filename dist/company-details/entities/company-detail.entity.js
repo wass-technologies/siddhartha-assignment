@@ -29,11 +29,19 @@ __decorate([
     __metadata("design:type", String)
 ], SubAdmin.prototype, "email", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
+    __metadata("design:type", String)
+], SubAdmin.prototype, "accountId", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => account_entity_1.Account, (account) => account.subAdmins),
     __metadata("design:type", account_entity_1.Account)
 ], SubAdmin.prototype, "account", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_detail_entity_1.School, (school) => school.subAdmins),
+    (0, typeorm_1.ManyToOne)(() => user_detail_entity_1.School, (school) => school.subAdmins, {
+        cascade: true,
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
+    }),
     __metadata("design:type", user_detail_entity_1.School)
 ], SubAdmin.prototype, "school", void 0);
 exports.SubAdmin = SubAdmin = __decorate([

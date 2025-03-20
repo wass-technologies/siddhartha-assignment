@@ -43,6 +43,7 @@ let AccountController = class AccountController {
         return account;
     }
     async assignStaffPermissions(accountId) {
+        console.log("Assigning staff permissions for:", accountId);
         const [menus, perms] = await Promise.all([
             this.menuService.findAll(),
             this.permissionService.findAll(),

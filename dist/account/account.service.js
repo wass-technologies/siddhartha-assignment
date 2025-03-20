@@ -64,7 +64,7 @@ let AccountService = class AccountService {
     }
     async create(dto, createdBy) {
         const user = await this.repo.findOne({
-            where: { email: dto.email },
+            where: { email: dto.email, role: dto.role },
         });
         if (user) {
             throw new common_1.ConflictException('email id already exists!');
@@ -94,7 +94,6 @@ let AccountService = class AccountService {
             entityObject = Object.assign({
                 name: dto.name,
                 email: dto.email,
-                dob: dto.dob,
                 accountId: payload.id,
             });
             await this.staffRepo.save(entityObject);

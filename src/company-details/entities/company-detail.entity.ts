@@ -30,12 +30,21 @@ export class SubAdmin {
   @Column({ unique: true })
   email: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  accountId: string;
+
+
   @ManyToOne(() => Account, (account) => account.subAdmins)
   account: Account;
 
-  @ManyToOne(() => School, (school) => school.subAdmins)
+  @ManyToOne(() => School, (school) => school.subAdmins, { 
+    cascade: true, 
+    onDelete: 'CASCADE', 
+    onUpdate: 'CASCADE' 
+  })
   school: School;
 }
+
 
 
 

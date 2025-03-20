@@ -5,6 +5,7 @@ import { SchoolStatus } from 'src/enum';
 export declare class School {
     id: string;
     name: string;
+    email: string;
     address1: string;
     address2: string;
     state: string;

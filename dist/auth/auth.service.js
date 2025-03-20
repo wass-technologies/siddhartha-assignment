@@ -83,7 +83,8 @@ let AuthService = class AuthService {
             const query = this.accountRepo
                 .createQueryBuilder('account')
                 .leftJoinAndSelect('account.schools', 'schools')
-                .leftJoinAndSelect('account.userDetail', 'userDetail')
+                .leftJoinAndSelect('account.subAdmins', 'subAdmins')
+                .leftJoinAndSelect('account.staffDetails', 'staffDetails')
                 .select([
                 'account.id',
                 'account.email',
@@ -91,10 +92,13 @@ let AuthService = class AuthService {
                 'account.role',
                 'account.status',
                 'schools.id',
-                'schools.schoolName',
+                'schools.name',
                 'schools.status',
-                'userDetail.id',
-                'userDetail.name',
+                'subAdmins.id',
+                'subAdmins.name',
+                'staffDetails.id',
+                'staffDetails.name',
+                'staffDetails.email',
             ]);
             if (role) {
                 query.andWhere('account.role = :role', { role });
@@ -117,13 +121,7 @@ let AuthService = class AuthService {
         if (!comparePassword) {
             throw new common_1.UnauthorizedException('Invalid Credentials');
         }
-        const payload = {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            status: user.status,
-        };
-        const token = this.jwtService.sign(payload);
+        const token = await apiFeatures_utils_1.default.assignJwtToken(user.id, this.jwtService);
         return { token };
     }
     async staffSignIn(dto) {
@@ -142,7 +140,7 @@ let AuthService = class AuthService {
             role: user.role,
             status: user.status
         };
-        const token = this.jwtService.sign(payload);
+        const token = await apiFeatures_utils_1.default.assignJwtToken(user.id, this.jwtService);
         return { token };
     }
     async subAdminsignIn(dto) {
@@ -154,11 +152,18 @@ let AuthService = class AuthService {
         if (!comparePassword) {
             throw new common_1.UnauthorizedException('Invalid Credentials');
         }
-        const payload = {
-            id: user.id,
-            email: user.email,
-            role: user.role
-        };
+        const token = await apiFeatures_utils_1.default.assignJwtToken(user.id, this.jwtService);
+        return { token };
+    }
+    async schoolLoin(dto) {
+        const user = await this.getUserDetails(dto.email, enum_1.UserRole.SCHOOL);
+        if (!user) {
+            throw new common_1.UnauthorizedException('Account not found or incorrect role!');
+        }
+        const comparePassword = await bcrypt.compare(dto.password, user.password);
+        if (!comparePassword) {
+            throw new common_1.UnauthorizedException('Invalid Credentials');
+        }
         const token = await apiFeatures_utils_1.default.assignJwtToken(user.id, this.jwtService);
         return { token };
     }

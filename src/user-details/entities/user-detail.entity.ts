@@ -20,6 +20,9 @@ export class School {
 
   @Column()
   name: string;
+  
+  @Column()
+  email:string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   address1: string;
@@ -63,7 +66,7 @@ export class School {
   account: Account;
 
   @OneToMany(() => SubAdmin, (subAdmin) => subAdmin.school)
-  subAdmins: SubAdmin[];
+  subAdmins: SubAdmin[];  
 
   @OneToMany(() => ClassEntity, (classEntity) => classEntity.school)
   classes: ClassEntity[];

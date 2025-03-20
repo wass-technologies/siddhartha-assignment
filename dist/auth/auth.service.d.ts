@@ -23,6 +23,9 @@ export declare class AuthService {
     subAdminsignIn(dto: LoginDto): Promise<{
         token: string;
     }>;
+    schoolLoin(dto: LoginDto): Promise<{
+        token: string;
+    }>;
     validate(id: string, role: UserRole): Promise<any>;
     findPermission(accountId: string): Promise<any>;
     private getPermissions;

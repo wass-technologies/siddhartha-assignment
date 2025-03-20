@@ -22,7 +22,7 @@ import { Repository } from 'typeorm';
 import { CreateDetailDto, signIn, StaffLoinDto, UpdateUserStatusDto } from './dto/login.dto';
 import { companyScheduleData } from 'src/week-schedule';
 import { CompanySchedule } from 'src/company-schedule/entities/company-schedule.entity';
-import { CreateMainAdminDto, CreateSubAdminDto, CreateUserDto, LoginDto } from 'src/account/dto/account.dto';
+import {  LoginDto } from 'src/account/dto/account.dto';
 
 @Injectable()
 export class AuthService {
@@ -52,13 +52,7 @@ export class AuthService {
     if (!comparePassword) {
       throw new UnauthorizedException('Invalid Credentials');
     }
-    const payload={
-      id:user.id,
-      email: user.email,
-      role: user.role,
-      status:user.status,
-    }
-    const token = this.jwtService.sign(payload);
+    const token = await APIFeatures.assignJwtToken(user.id, this.jwtService);
     return { token };
   }
 
@@ -84,7 +78,7 @@ export class AuthService {
       status:user.status
     };
   
-    const token = this.jwtService.sign(payload);
+    const token = await APIFeatures.assignJwtToken(user.id, this.jwtService);
     return { token };
   }
 
@@ -99,14 +93,28 @@ export class AuthService {
     if (!comparePassword) {
       throw new UnauthorizedException('Invalid Credentials');
     }
-    const payload={
-      id:user.id,
-      email:user.email,
-      role:user.role
-    }
+
     const token = await APIFeatures.assignJwtToken(user.id, this.jwtService);
     return { token };
   }
+
+  //login School
+
+  async schoolLoin(dto:LoginDto){
+    const user = await this.getUserDetails(dto.email,UserRole.SCHOOL);
+    if (!user) {
+      throw new UnauthorizedException('Account not found or incorrect role!');
+    }
+    const comparePassword = await bcrypt.compare(dto.password, user.password);
+    if (!comparePassword) {
+      throw new UnauthorizedException('Invalid Credentials');
+    }
+    const token= await APIFeatures.assignJwtToken(user.id, this.jwtService);
+    return { token };
+    
+  }
+
+
 
 
 
@@ -149,41 +157,46 @@ async validate(id: string, role: UserRole) {
 
   // Get User Details
 
-private getUserDetails = async (
-  loginId: string,
-  role?: UserRole,
-): Promise<any> => {
-  const query = this.accountRepo
-    .createQueryBuilder('account')
-    .leftJoinAndSelect('account.schools', 'schools')
-    .leftJoinAndSelect('account.userDetail', 'userDetail')
-    .select([
-      'account.id',
-      'account.email',
-      'account.password',
-      'account.role',
-      'account.status',
-      'schools.id',
-      'schools.schoolName',
-      'schools.status',
-      'userDetail.id',
-      'userDetail.name',
-    ]);
-
-  if (role) {
-    query.andWhere('account.role = :role', { role });
-  }
-
-  const result = await query
-    .andWhere('account.email = :loginId', { loginId })
-    .getOne();
-
-  if (!result) {
-    throw new UnauthorizedException('Account not found!');
-  }
-
-  return result;
-};
+  private getUserDetails = async (
+    loginId: string,
+    role?: UserRole,
+  ): Promise<any> => {
+    const query = this.accountRepo
+      .createQueryBuilder('account')
+      .leftJoinAndSelect('account.schools', 'schools')
+      .leftJoinAndSelect('account.subAdmins', 'subAdmins') 
+      .leftJoinAndSelect('account.staffDetails', 'staffDetails')
+      .select([
+        'account.id',
+        'account.email',
+        'account.password',
+        'account.role',
+        'account.status',
+        'schools.id',
+        'schools.name', 
+        'schools.status',
+        'subAdmins.id',
+        'subAdmins.name',
+        'staffDetails.id', 
+        'staffDetails.name',
+        'staffDetails.email',
+      ]);
+  
+    if (role) {
+      query.andWhere('account.role = :role', { role });
+    }
+  
+    const result = await query
+      .andWhere('account.email = :loginId', { loginId })
+      .getOne();
+  
+    if (!result) {
+      throw new UnauthorizedException('Account not found!');
+    }
+  
+    return result;
+  };
+  
 
 
   

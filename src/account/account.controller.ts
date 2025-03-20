@@ -53,6 +53,7 @@ export class AccountController {
   }
 
   private async assignStaffPermissions(accountId: string) {
+    console.log("Assigning staff permissions for:", accountId);
     
     const [menus, perms] = await Promise.all([
       this.menuService.findAll(),
@@ -67,8 +68,8 @@ export class AccountController {
         permissionId: perm.id,
       }))
     );
+  await this.userPermService.create(userPermissions);
 
-    await this.userPermService.create(userPermissions);
   }
 
 
