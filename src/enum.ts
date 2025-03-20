@@ -2,6 +2,7 @@ export enum UserRole {
   MAIN_ADMIN = 'MAIN_ADMIN',
   SUB_ADMIN = 'SUB_ADMIN',
   STAFF = 'STAFF',
+  SCHOOL = 'SCHOOL'
 }
 
 export enum DefaultStatus {

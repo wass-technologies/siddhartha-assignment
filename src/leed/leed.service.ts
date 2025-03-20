@@ -3,7 +3,7 @@ import { CreateLeedDto, LeedPaginationDto, PdfLeadPaginationDto } from './dto/cr
 import { InjectRepository } from '@nestjs/typeorm';
 import { Leed } from './entities/leed.entity';
 import { Repository } from 'typeorm';
-import { UserDetail } from 'src/user-details/entities/user-detail.entity';
+
 import { CallHistory } from 'src/call-history/entities/call-history.entity';
 import { LeedStatus, UserRole } from 'src/enum';
 
@@ -11,36 +11,35 @@ import { LeedStatus, UserRole } from 'src/enum';
 export class LeedService {
   constructor(
     @InjectRepository(Leed) private readonly repo: Repository<Leed>,
-    @InjectRepository(UserDetail)
-    private readonly userDetailRepo: Repository<UserDetail>,
+
     @InjectRepository(CallHistory)
     private readonly callHistoryRepo: Repository<CallHistory>,
   ) {}
 
-  async create(dto: CreateLeedDto, companyDetailId: string, accountId: string) {
-    const user = await this.userDetailRepo
-      .createQueryBuilder('userDetail')
-      .leftJoinAndSelect('userDetail.account', 'account')
-      .where('userDetail.accountId = :accountId', { accountId: accountId })
-      .getOne();
-    const obj = Object.assign({
-      name: user.name,
-      enquiryFor: dto.enquiryFor,
-      contactNumber: user.account['phoneNumber'],
+  // async create(dto: CreateLeedDto, companyDetailId: string, accountId: string) {
+  //   const user = await this.userDetailRepo
+  //     .createQueryBuilder('userDetail')
+  //     .leftJoinAndSelect('userDetail.account', 'account')
+  //     .where('userDetail.accountId = :accountId', { accountId: accountId })
+  //     .getOne();
+  //   const obj = Object.assign({
+  //     name: user.name,
+  //     enquiryFor: dto.enquiryFor,
+  //     contactNumber: user.account['phoneNumber'],
       
-      location: dto.location,
-      companyDetailId,
-      accountId,
-    });
-    const leed = await this.repo.save(obj);
-    const callObj = Object.assign({
-      accountId: accountId,
-      companyDetailId: companyDetailId,
-      role: UserRole.MAIN_ADMIN,
-    });
-    this.callHistoryRepo.save(callObj);
-    return leed;
-  }
+  //     location: dto.location,
+  //     companyDetailId,
+  //     accountId,
+  //   });
+  //   const leed = await this.repo.save(obj);
+  //   const callObj = Object.assign({
+  //     accountId: accountId,
+  //     companyDetailId: companyDetailId,
+  //     role: UserRole.MAIN_ADMIN,
+  //   });
+  //   this.callHistoryRepo.save(callObj);
+  //   return leed;
+  // }
 
   async findAll(dto: LeedPaginationDto, companyDetailId: string) {
     const fromDate = new Date(dto.fromDate);

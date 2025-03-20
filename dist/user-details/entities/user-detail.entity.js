@@ -9,49 +9,77 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserDetail = void 0;
+exports.School = void 0;
 const account_entity_1 = require("../../account/entities/account.entity");
+const class_entity_1 = require("../../class/entities/class.entity");
+const company_detail_entity_1 = require("../../company-details/entities/company-detail.entity");
+const enum_1 = require("../../enum");
 const typeorm_1 = require("typeorm");
-let UserDetail = class UserDetail {
+let School = class School {
 };
-exports.UserDetail = UserDetail;
+exports.School = School;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
     __metadata("design:type", String)
-], UserDetail.prototype, "id", void 0);
+], School.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 55 }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], UserDetail.prototype, "name", void 0);
+], School.prototype, "name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar', length: 100, unique: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 500, nullable: true }),
     __metadata("design:type", String)
-], UserDetail.prototype, "email", void 0);
+], School.prototype, "address1", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 500, nullable: true }),
+    __metadata("design:type", String)
+], School.prototype, "address2", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
+    __metadata("design:type", String)
+], School.prototype, "state", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
+    __metadata("design:type", String)
+], School.prototype, "city", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
+    __metadata("design:type", String)
+], School.prototype, "area", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 50, nullable: true }),
+    __metadata("design:type", String)
+], School.prototype, "pincode", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'enum', enum: enum_1.SchoolStatus, default: enum_1.SchoolStatus.PENDING }),
+    __metadata("design:type", String)
+], School.prototype, "status", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
     __metadata("design:type", String)
-], UserDetail.prototype, "assignedByAdminId", void 0);
+], School.prototype, "accountId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
-], UserDetail.prototype, "createdAt", void 0);
+], School.prototype, "createdAt", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
-], UserDetail.prototype, "updatedAt", void 0);
+], School.prototype, "updatedAt", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
-    __metadata("design:type", String)
-], UserDetail.prototype, "accountId", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => account_entity_1.Account, (account) => account.userDetail, {
-        cascade: true,
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-    }),
+    (0, typeorm_1.ManyToOne)(() => account_entity_1.Account, (account) => account.schools, { cascade: true, onUpdate: 'CASCADE',
+        onDelete: 'CASCADE', }),
     __metadata("design:type", account_entity_1.Account)
-], UserDetail.prototype, "account", void 0);
-exports.UserDetail = UserDetail = __decorate([
+], School.prototype, "account", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => company_detail_entity_1.SubAdmin, (subAdmin) => subAdmin.school),
+    __metadata("design:type", Array)
+], School.prototype, "subAdmins", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => class_entity_1.ClassEntity, (classEntity) => classEntity.school),
+    __metadata("design:type", Array)
+], School.prototype, "classes", void 0);
+exports.School = School = __decorate([
     (0, typeorm_1.Entity)()
-], UserDetail);
+], School);
 //# sourceMappingURL=user-detail.entity.js.map

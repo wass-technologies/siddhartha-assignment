@@ -10,7 +10,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CompanySchedule = void 0;
-const company_detail_entity_1 = require("../../company-details/entities/company-detail.entity");
 const enum_1 = require("../../enum");
 const typeorm_1 = require("typeorm");
 let CompanySchedule = class CompanySchedule {
@@ -48,14 +47,6 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], CompanySchedule.prototype, "updatedAt", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => company_detail_entity_1.SchoolDetails, (companyDetail) => companyDetail.companySchedule, {
-        cascade: true,
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-    }),
-    __metadata("design:type", Array)
-], CompanySchedule.prototype, "companyDetail", void 0);
 exports.CompanySchedule = CompanySchedule = __decorate([
     (0, typeorm_1.Entity)()
 ], CompanySchedule);

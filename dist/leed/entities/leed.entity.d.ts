@@ -1,4 +1,3 @@
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
 import { LeedStatus } from 'src/enum';
 export declare class Leed {
     id: string;
@@ -12,5 +11,4 @@ export declare class Leed {
     status: LeedStatus;
     createdAt: Date;
     updatedAt: Date;
-    companyDetail: SchoolDetails[];
 }

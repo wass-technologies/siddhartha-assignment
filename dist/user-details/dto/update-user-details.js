@@ -9,30 +9,77 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaginationSDto = exports.UpdateUserDetailDto = void 0;
+exports.PaginationDto = exports.PaginationSDto = exports.StatusDto = exports.SchoolDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-class UpdateUserDetailDto {
+const enum_1 = require("../../enum");
+class SchoolDto {
 }
-exports.UpdateUserDetailDto = UpdateUserDetailDto;
+exports.SchoolDto = SchoolDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(0),
     (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
-], UpdateUserDetailDto.prototype, "name", void 0);
+], SchoolDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.MinLength)(0),
+    (0, class_validator_1.MaxLength)(50),
+    __metadata("design:type", String)
+], SchoolDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(0),
     (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
-], UpdateUserDetailDto.prototype, "email", void 0);
+], SchoolDto.prototype, "state", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(0),
+    (0, class_validator_1.MaxLength)(50),
     __metadata("design:type", String)
-], UpdateUserDetailDto.prototype, "accountId", void 0);
+], SchoolDto.prototype, "city", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(0),
+    (0, class_validator_1.MaxLength)(50),
+    __metadata("design:type", String)
+], SchoolDto.prototype, "area", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(0),
+    (0, class_validator_1.MaxLength)(200),
+    __metadata("design:type", String)
+], SchoolDto.prototype, "address1", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(0),
+    (0, class_validator_1.MaxLength)(200),
+    __metadata("design:type", String)
+], SchoolDto.prototype, "address2", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(0),
+    (0, class_validator_1.MaxLength)(50),
+    __metadata("design:type", String)
+], SchoolDto.prototype, "pincode", void 0);
+class StatusDto {
+}
+exports.StatusDto = StatusDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(enum_1.SchoolStatus),
+    __metadata("design:type", String)
+], StatusDto.prototype, "status", void 0);
 class PaginationSDto {
 }
 exports.PaginationSDto = PaginationSDto;
@@ -55,4 +102,31 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PaginationSDto.prototype, "keyword", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(enum_1.SchoolStatus),
+    __metadata("design:type", String)
+], PaginationSDto.prototype, "status", void 0);
+class PaginationDto {
+}
+exports.PaginationDto = PaginationDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(10),
+    (0, class_validator_1.Max)(50),
+    __metadata("design:type", Number)
+], PaginationDto.prototype, "limit", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PaginationDto.prototype, "offset", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], PaginationDto.prototype, "keyword", void 0);
 //# sourceMappingURL=update-user-details.js.map

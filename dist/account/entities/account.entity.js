@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Account = void 0;
 const company_detail_entity_1 = require("../../company-details/entities/company-detail.entity");
 const enum_1 = require("../../enum");
+const staff_detail_entity_1 = require("../../staff-details/entities/staff-detail.entity");
 const user_detail_entity_1 = require("../../user-details/entities/user-detail.entity");
 const user_permission_entity_1 = require("../../user-permissions/entities/user-permission.entity");
 const typeorm_1 = require("typeorm");
@@ -35,17 +36,33 @@ __decorate([
     __metadata("design:type", String)
 ], Account.prototype, "password", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: enum_1.UserRole, default: enum_1.UserRole.STAFF }),
-    __metadata("design:type", String)
-], Account.prototype, "role", void 0);
-__decorate([
     (0, typeorm_1.Column)({ type: 'uuid', nullable: true }),
     __metadata("design:type", String)
 ], Account.prototype, "createdBy", void 0);
 __decorate([
+    (0, typeorm_1.OneToMany)(() => user_permission_entity_1.UserPermission, (userPermission) => userPermission.account),
+    __metadata("design:type", Array)
+], Account.prototype, "userPermission", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'enum', enum: enum_1.UserRole, default: enum_1.UserRole.STAFF }),
+    __metadata("design:type", String)
+], Account.prototype, "role", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: enum_1.DefaultStatus, default: enum_1.DefaultStatus.ACTIVE }),
     __metadata("design:type", String)
 ], Account.prototype, "status", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => staff_detail_entity_1.StaffDetail, (staffDetail) => staffDetail.account),
+    __metadata("design:type", Array)
+], Account.prototype, "staffDetails", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => user_detail_entity_1.School, (school) => school.account),
+    __metadata("design:type", Array)
+], Account.prototype, "schools", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => company_detail_entity_1.SubAdmin, (subAdmin) => subAdmin.account),
+    __metadata("design:type", Array)
+], Account.prototype, "subAdmins", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
@@ -54,18 +71,6 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], Account.prototype, "updatedAt", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => company_detail_entity_1.SchoolDetails, (school) => school.subAdmin),
-    __metadata("design:type", Array)
-], Account.prototype, "schools", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => user_permission_entity_1.UserPermission, (userPermission) => userPermission.account),
-    __metadata("design:type", Array)
-], Account.prototype, "userPermission", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => user_detail_entity_1.UserDetail, (userDetail) => userDetail.account),
-    __metadata("design:type", Array)
-], Account.prototype, "userDetail", void 0);
 exports.Account = Account = __decorate([
     (0, typeorm_1.Entity)()
 ], Account);

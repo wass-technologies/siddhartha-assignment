@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { UserRole } from 'src/enum';
 
 export class CreateMainAdminDto {
   @IsEmail()
@@ -55,5 +56,6 @@ export class CreateAccountDto {
   name: string;
   email: string;
   dob: string;
+  role:UserRole;
 }
 

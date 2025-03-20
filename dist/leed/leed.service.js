@@ -17,37 +17,12 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const leed_entity_1 = require("./entities/leed.entity");
 const typeorm_2 = require("typeorm");
-const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 const call_history_entity_1 = require("../call-history/entities/call-history.entity");
 const enum_1 = require("../enum");
 let LeedService = class LeedService {
-    constructor(repo, userDetailRepo, callHistoryRepo) {
+    constructor(repo, callHistoryRepo) {
         this.repo = repo;
-        this.userDetailRepo = userDetailRepo;
         this.callHistoryRepo = callHistoryRepo;
-    }
-    async create(dto, companyDetailId, accountId) {
-        const user = await this.userDetailRepo
-            .createQueryBuilder('userDetail')
-            .leftJoinAndSelect('userDetail.account', 'account')
-            .where('userDetail.accountId = :accountId', { accountId: accountId })
-            .getOne();
-        const obj = Object.assign({
-            name: user.name,
-            enquiryFor: dto.enquiryFor,
-            contactNumber: user.account['phoneNumber'],
-            location: dto.location,
-            companyDetailId,
-            accountId,
-        });
-        const leed = await this.repo.save(obj);
-        const callObj = Object.assign({
-            accountId: accountId,
-            companyDetailId: companyDetailId,
-            role: enum_1.UserRole.MAIN_ADMIN,
-        });
-        this.callHistoryRepo.save(callObj);
-        return leed;
     }
     async findAll(dto, companyDetailId) {
         const fromDate = new Date(dto.fromDate);
@@ -202,10 +177,8 @@ exports.LeedService = LeedService;
 exports.LeedService = LeedService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(leed_entity_1.Leed)),
-    __param(1, (0, typeorm_1.InjectRepository)(user_detail_entity_1.UserDetail)),
-    __param(2, (0, typeorm_1.InjectRepository)(call_history_entity_1.CallHistory)),
+    __param(1, (0, typeorm_1.InjectRepository)(call_history_entity_1.CallHistory)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository])
 ], LeedService);
 //# sourceMappingURL=leed.service.js.map

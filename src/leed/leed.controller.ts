@@ -31,16 +31,16 @@ import { createTable } from 'src/utils/createTable.utils';
 export class LeedController {
   constructor(private readonly leedService: LeedService) {}
 
-  @Post(':companyDetailId')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(UserRole.MAIN_ADMIN)
-  create(
-    @Param('companyDetailId') companyDetailId: string,
-    @Body() dto: CreateLeedDto,
-    @CurrentUser() user: Account,
-  ) {
-    return this.leedService.create(dto, companyDetailId, user.id);
-  }
+  // @Post(':companyDetailId')
+  // @UseGuards(AuthGuard('jwt'), RolesGuard)
+  // @Roles(UserRole.MAIN_ADMIN)
+  // create(
+  //   @Param('companyDetailId') companyDetailId: string,
+  //   @Body() dto: CreateLeedDto,
+  //   @CurrentUser() user: Account,
+  // ) {
+  //   return this.leedService.create(dto, companyDetailId, user.id);
+  // }
 
   // @Get()
   // @UseGuards(AuthGuard('jwt'), RolesGuard)

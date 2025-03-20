@@ -21,9 +21,9 @@ const user_permission_entity_1 = require("../user-permissions/entities/user-perm
 const casl_ability_factory_1 = require("./factory/casl-ability.factory");
 const permissions_guard_1 = require("./guards/permissions.guard");
 const jwt_strategy_1 = require("./strategy/jwt.strategy");
-const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
-const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 const company_schedule_entity_1 = require("../company-schedule/entities/company-schedule.entity");
+const staff_details_module_1 = require("../staff-details/staff-details.module");
+const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -34,8 +34,7 @@ exports.AuthModule = AuthModule = __decorate([
                 account_entity_1.Account,
                 login_history_entity_1.LoginHistory,
                 user_permission_entity_1.UserPermission,
-                company_detail_entity_1.SchoolDetails,
-                user_detail_entity_1.UserDetail,
+                user_detail_entity_1.School,
                 company_schedule_entity_1.CompanySchedule
             ]),
             passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -54,7 +53,7 @@ exports.AuthModule = AuthModule = __decorate([
             axios_1.HttpModule.register({
                 timeout: 5000,
                 maxRedirects: 5,
-            }),
+            }), staff_details_module_1.StaffDetailsModule,
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, casl_ability_factory_1.CaslAbilityFactory, permissions_guard_1.PermissionsGuard],

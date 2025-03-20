@@ -10,17 +10,20 @@ import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
 
 import { SearchHistoryModule } from 'src/search-history/search-history.module';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+import { School } from 'src/user-details/entities/user-detail.entity';
+import { SubAdmin } from 'src/company-details/entities/company-detail.entity';
+import { StaffDetail } from 'src/staff-details/entities/staff-detail.entity';
+
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Account,SchoolDetails]),
+    TypeOrmModule.forFeature([Account,School,SubAdmin,StaffDetail]),
     AuthModule,
     MenusModule,
     PermissionsModule,
     UserPermissionsModule,
+    SearchHistoryModule,
     
-    SearchHistoryModule
   ],
   controllers: [AccountController],
   providers: [AccountService],

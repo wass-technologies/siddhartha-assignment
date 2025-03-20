@@ -14,19 +14,45 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AccountController = void 0;
 const common_1 = require("@nestjs/common");
+const passport_1 = require("@nestjs/passport");
+const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
+const permissions_decorator_1 = require("../auth/decorators/permissions.decorator");
+const roles_decorator_1 = require("../auth/decorators/roles.decorator");
+const permissions_guard_1 = require("../auth/guards/permissions.guard");
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const enum_1 = require("../enum");
 const menus_service_1 = require("../menus/menus.service");
 const permissions_service_1 = require("../permissions/permissions.service");
 const user_permissions_service_1 = require("../user-permissions/user-permissions.service");
 const account_service_1 = require("./account.service");
-const search_history_service_1 = require("../search-history/search-history.service");
+const account_entity_1 = require("./entities/account.entity");
 const company_detail_dto_1 = require("../company-details/dto/company-detail.dto");
+const account_dto_1 = require("./dto/account.dto");
 let AccountController = class AccountController {
-    constructor(accountService, searchHistoryService, menuService, permissionService, userPermService) {
+    constructor(accountService, menuService, permissionService, userPermService) {
         this.accountService = accountService;
-        this.searchHistoryService = searchHistoryService;
         this.menuService = menuService;
         this.permissionService = permissionService;
         this.userPermService = userPermService;
+    }
+    async create(dto, user) {
+        const account = await this.accountService.create(dto, user.id);
+        if (dto.role === enum_1.UserRole.STAFF) {
+            await this.assignStaffPermissions(account.id);
+        }
+        return account;
+    }
+    async assignStaffPermissions(accountId) {
+        const [menus, perms] = await Promise.all([
+            this.menuService.findAll(),
+            this.permissionService.findAll(),
+        ]);
+        const userPermissions = menus.flatMap((menu) => perms.map((perm) => ({
+            accountId,
+            menuId: menu.id,
+            permissionId: perm.id,
+        })));
+        await this.userPermService.create(userPermissions);
     }
     async getAllSubAdmins(paginationDto) {
         return this.accountService.findAllSubAdmins(paginationDto);
@@ -39,6 +65,17 @@ let AccountController = class AccountController {
     }
 };
 exports.AccountController = AccountController;
+__decorate([
+    (0, common_1.Post)('create'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.CREATE, 'account']),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [account_dto_1.CreateAccountDto, account_entity_1.Account]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('sub-admins'),
     __param(0, (0, common_1.Body)()),
@@ -63,7 +100,6 @@ __decorate([
 exports.AccountController = AccountController = __decorate([
     (0, common_1.Controller)('account'),
     __metadata("design:paramtypes", [account_service_1.AccountService,
-        search_history_service_1.SearchHistoryService,
         menus_service_1.MenusService,
         permissions_service_1.PermissionsService,
         user_permissions_service_1.UserPermissionsService])

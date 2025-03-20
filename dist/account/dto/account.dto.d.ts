@@ -1,3 +1,4 @@
+import { UserRole } from 'src/enum';
 export declare class CreateMainAdminDto {
     email: string;
     password: string;
@@ -17,4 +18,11 @@ export declare class CreateUserDto {
 export declare class LoginDto {
     email: string;
     password: string;
+}
+export declare class CreateAccountDto {
+    password: string;
+    name: string;
+    email: string;
+    dob: string;
+    role: UserRole;
 }

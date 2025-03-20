@@ -4,16 +4,17 @@ import { UpdateClassDto } from './dto/update-class.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import {  ClassEntity } from './entities/class.entity';
 import { Brackets, Repository } from 'typeorm';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+
 import { Account } from 'src/account/entities/account.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { UserRole } from 'src/enum';
+import { School } from 'src/user-details/entities/user-detail.entity';
 
 @Injectable()
 export class ClassService {
   constructor(
     @InjectRepository(ClassEntity) private readonly classRepo : Repository<ClassEntity>,
-    @InjectRepository(SchoolDetails) private readonly schoolRepo : Repository<SchoolDetails>,
+    @InjectRepository(School) private readonly schoolRepo : Repository<School>,
     @InjectRepository(Student) private readonly studentRepo : Repository<Student>,
 
   ){}
@@ -44,7 +45,7 @@ export class ClassService {
         'class.id',
         'class.className',
         'school.id',
-        'school.schoolName',
+        'school.name',
       ])
       .where('class.schoolId = :schoolId', { schoolId });
 

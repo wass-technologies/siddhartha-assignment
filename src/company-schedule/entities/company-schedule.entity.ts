@@ -1,4 +1,4 @@
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+
 import { DayList } from 'src/enum';
 import {
   Column,
@@ -36,16 +36,16 @@ export class CompanySchedule {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(
-    () => SchoolDetails,
-    (companyDetail) => companyDetail.companySchedule,
-    {
-      cascade: true,
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    },
-  )
-  companyDetail: SchoolDetails[];
+  // @ManyToOne(
+  //   () => SchoolDetails,
+  //   (companyDetail) => companyDetail.companySchedule,
+  //   {
+  //     cascade: true,
+  //     onDelete: 'CASCADE',
+  //     onUpdate: 'CASCADE',
+  //   },
+  // )
+  // companyDetail: SchoolDetails[];
 
   // @OneToMany(() => Period, (period) => period.companySchedule)
   // period: Period[];

@@ -1,5 +1,5 @@
 import { Account } from 'src/account/entities/account.entity';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+
 import { LeedStatus } from 'src/enum';
 import {
   Column,
@@ -52,10 +52,10 @@ export class Leed {
   // })
   // account: Account[];
   
-  @ManyToOne(() => SchoolDetails, (companyDetail) => companyDetail.leed, {
-    cascade: true,
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE',
-  })
-  companyDetail: SchoolDetails[];
+  // @ManyToOne(() => SchoolDetails, (companyDetail) => companyDetail.leed, {
+  //   cascade: true,
+  //   onUpdate: 'CASCADE',
+  //   onDelete: 'CASCADE',
+  // })
+  // companyDetail: SchoolDetails[];
 }

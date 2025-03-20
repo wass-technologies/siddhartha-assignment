@@ -58,7 +58,7 @@ import { StaffDetailsModule } from './staff-details/staff-details.module';
       password: process.env.BL_DB_PASS,
       database: process.env.BL_DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false,
+      synchronize: true,
     }),
     CacheModule.register({
       isGlobal: true,

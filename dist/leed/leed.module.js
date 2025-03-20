@@ -13,7 +13,6 @@ const leed_controller_1 = require("./leed.controller");
 const typeorm_1 = require("@nestjs/typeorm");
 const leed_entity_1 = require("./entities/leed.entity");
 const auth_module_1 = require("../auth/auth.module");
-const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 const call_history_entity_1 = require("../call-history/entities/call-history.entity");
 let LeedModule = class LeedModule {
 };
@@ -21,7 +20,7 @@ exports.LeedModule = LeedModule;
 exports.LeedModule = LeedModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([leed_entity_1.Leed, user_detail_entity_1.UserDetail, call_history_entity_1.CallHistory]),
+            typeorm_1.TypeOrmModule.forFeature([leed_entity_1.Leed, call_history_entity_1.CallHistory]),
             auth_module_1.AuthModule,
         ],
         controllers: [leed_controller_1.LeedController],

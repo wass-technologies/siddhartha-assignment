@@ -17,19 +17,21 @@ const account_controller_1 = require("./account.controller");
 const account_service_1 = require("./account.service");
 const account_entity_1 = require("./entities/account.entity");
 const search_history_module_1 = require("../search-history/search-history.module");
+const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
+const staff_detail_entity_1 = require("../staff-details/entities/staff-detail.entity");
 let AccountModule = class AccountModule {
 };
 exports.AccountModule = AccountModule;
 exports.AccountModule = AccountModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([account_entity_1.Account, company_detail_entity_1.SchoolDetails]),
+            typeorm_1.TypeOrmModule.forFeature([account_entity_1.Account, user_detail_entity_1.School, company_detail_entity_1.SubAdmin, staff_detail_entity_1.StaffDetail]),
             auth_module_1.AuthModule,
             menus_module_1.MenusModule,
             permissions_module_1.PermissionsModule,
             user_permissions_module_1.UserPermissionsModule,
-            search_history_module_1.SearchHistoryModule
+            search_history_module_1.SearchHistoryModule,
         ],
         controllers: [account_controller_1.AccountController],
         providers: [account_service_1.AccountService],

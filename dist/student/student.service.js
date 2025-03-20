@@ -18,8 +18,8 @@ const typeorm_1 = require("@nestjs/typeorm");
 const student_entity_1 = require("./entities/student.entity");
 const typeorm_2 = require("typeorm");
 const class_entity_1 = require("../class/entities/class.entity");
-const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
 const enum_1 = require("../enum");
+const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 let StudentService = class StudentService {
     constructor(studentrepo, classRepo, schoolRepo) {
         this.studentrepo = studentrepo;
@@ -86,7 +86,7 @@ let StudentService = class StudentService {
         return student;
     }
     async updateStudent(schoolName, classId, dto, id, subAdmin) {
-        const subSchool = await this.schoolRepo.findOne({ where: { schoolName: schoolName },
+        const subSchool = await this.schoolRepo.findOne({ where: { name: schoolName },
         });
         if (!subSchool) {
             throw new common_1.NotFoundException('Sub School not found');
@@ -97,7 +97,7 @@ let StudentService = class StudentService {
         if (subSchool.status === enum_1.SchoolStatus.INACTIVE) {
             throw new common_1.ForbiddenException('School is not Active');
         }
-        const classEntity = await this.classRepo.findOne({ where: { id: classId, school: { schoolName: schoolName } },
+        const classEntity = await this.classRepo.findOne({ where: { id: classId, school: { name: schoolName } },
             relations: ['subSchool'] });
         if (!classEntity) {
             throw new common_1.NotFoundException('Class not found');
@@ -127,7 +127,7 @@ exports.StudentService = StudentService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(student_entity_1.Student)),
     __param(1, (0, typeorm_1.InjectRepository)(class_entity_1.ClassEntity)),
-    __param(2, (0, typeorm_1.InjectRepository)(company_detail_entity_1.SchoolDetails)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_detail_entity_1.School)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository])

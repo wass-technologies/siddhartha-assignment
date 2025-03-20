@@ -10,8 +10,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClassEntity = void 0;
-const company_detail_entity_1 = require("../../company-details/entities/company-detail.entity");
 const student_entity_1 = require("../../student/entities/student.entity");
+const user_detail_entity_1 = require("../../user-details/entities/user-detail.entity");
 const typeorm_1 = require("typeorm");
 let ClassEntity = class ClassEntity {
 };
@@ -25,10 +25,10 @@ __decorate([
     __metadata("design:type", String)
 ], ClassEntity.prototype, "className", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => company_detail_entity_1.SchoolDetails, (company) => company.classes, {
+    (0, typeorm_1.ManyToOne)(() => user_detail_entity_1.School, (company) => company.classes, {
         onDelete: 'CASCADE',
     }),
-    __metadata("design:type", company_detail_entity_1.SchoolDetails)
+    __metadata("design:type", user_detail_entity_1.School)
 ], ClassEntity.prototype, "school", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => student_entity_1.Student, (student) => student.class),

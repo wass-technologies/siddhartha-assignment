@@ -1,71 +1,89 @@
 import {
   Body,
   Controller,
-  FileTypeValidator,
+  Delete,
   Get,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
-  Patch,
+  Post,
   Put,
-  Query,
-  UploadedFile,
+  Res,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { Account } from 'src/account/entities/account.entity';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { UserRole } from 'src/enum';
-import { PaginationSDto, UpdateUserDetailDto } from './dto/update-user-details';
-import { UserDetailsService } from './user-details.service';
-import { UpdateUserStatusDto } from 'src/auth/dto/login.dto';
+import { PermissionAction, UserRole } from 'src/enum';
+import { PaginationDto, PaginationSDto, SchoolDto, StatusDto,  } from './dto/update-user-details';
+import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { School } from './entities/user-detail.entity';
+import { SchoolService } from './user-details.service';
+import { CheckPermissions } from 'src/auth/decorators/permissions.decorator';
+import { Response } from 'express';
 
-@Controller('user-details')
-export class UserDetailsController {
-  constructor(private readonly userDetailsService: UserDetailsService) {}
 
-  @Get()
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller('school')
+@UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
+export class SchoolController {
+  constructor(private readonly schoolService: SchoolService) {}
+
+
+  //Create
+
+  @Post('create')
   @Roles(UserRole.MAIN_ADMIN)
-  findAll(@Query() dto: PaginationSDto) {
-    return this.userDetailsService.findAll(dto);
+  async createSchool(@Body() dto: SchoolDto) {
+    return this.schoolService.createSchool(dto);
   }
 
-  @Get('profile')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(...Object.values(UserRole))
-  profile(@CurrentUser() user: Account) {
-    return this.userDetailsService.getProfile(user.id);
+  //Read 
+
+  @Get('all-school')
+  @Roles(UserRole.MAIN_ADMIN, UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'school_detail'])
+  async findList(@Body() dto: PaginationDto) {
+    return this.schoolService.findList(dto);
   }
 
-  @Patch('user/register')
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Get('by-status')
   @Roles(UserRole.STAFF)
-  update(@Body() dto: UpdateUserDetailDto, @CurrentUser() user: Account) {
-    dto.accountId = user.id;
-    return this.userDetailsService.update(dto, user.id);
+  @CheckPermissions([PermissionAction.READ, 'school_detail'])
+  async getSchoolsByStatus(@Body() paginationDto: PaginationSDto) {
+    return this.schoolService.findListByStatus(paginationDto);
   }
 
-
-  @Patch(':id/status')
-  async updateUserStatus(
-    @Param('id') userId: string,
-    @Body() updateUserStatusDto: UpdateUserStatusDto,
-  ) {
-    return this.userDetailsService.updateUserStatus(userId, updateUserStatusDto);
+  @Get(':id')
+  @Roles(UserRole.SUB_ADMIN, UserRole.STAFF)
+  async findSchool(@Param('id') id: string) {
+    return this.schoolService.findSchool(id);
   }
 
-  @Get(':id/status')
-  async getUserStatus(@Param('id') userId: string) {
-    return this.userDetailsService.getUserStatus(userId);
+  // Update 
+  @Put(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async update(@Param('id') id: string, @Body() dto: SchoolDto) {
+    return this.schoolService.update(id, dto);
   }
 
+  @Put(':id/status')
+  @Roles(UserRole.MAIN_ADMIN)
+  @CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
+  async status(@Param('id') id: string, @Body() dto: StatusDto) {
+    return this.schoolService.status(id, dto);
+  }
 
+  // Delete
 
+  @Delete(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async deleteSchool(@Param('id') id: string) {
+    return this.schoolService.deleteSchool(id);
+  }
+
+  // Export
+  @Get('export/pdf')
+  @Roles(UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'school_detail'])
+  async generateSchoolListPdf(@Res() res: Response) {
+    return this.schoolService.generateSchoolListPdf(res);
+  }
 }

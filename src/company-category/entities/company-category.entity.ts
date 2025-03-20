@@ -1,6 +1,5 @@
 import { Account } from 'src/account/entities/account.entity';
 import { Category } from 'src/category/entities/category.entity';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
 import { YNStatus } from 'src/enum';
 import {
   Column,

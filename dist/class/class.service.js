@@ -17,9 +17,9 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const class_entity_1 = require("./entities/class.entity");
 const typeorm_2 = require("typeorm");
-const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
 const student_entity_1 = require("../student/entities/student.entity");
 const enum_1 = require("../enum");
+const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 let ClassService = class ClassService {
     constructor(classRepo, schoolRepo, studentRepo) {
         this.classRepo = classRepo;
@@ -48,7 +48,7 @@ let ClassService = class ClassService {
             'class.id',
             'class.className',
             'school.id',
-            'school.schoolName',
+            'school.name',
         ])
             .where('class.schoolId = :schoolId', { schoolId });
         if (dto.keyword) {
@@ -114,7 +114,7 @@ exports.ClassService = ClassService;
 exports.ClassService = ClassService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(class_entity_1.ClassEntity)),
-    __param(1, (0, typeorm_1.InjectRepository)(company_detail_entity_1.SchoolDetails)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_detail_entity_1.School)),
     __param(2, (0, typeorm_1.InjectRepository)(student_entity_1.Student)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,

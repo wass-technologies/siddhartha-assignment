@@ -25,16 +25,56 @@ import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
 import { SearchHistoryService } from 'src/search-history/search-history.service';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
+import { CreateAccountDto } from './dto/account.dto';
 
 @Controller('account')
 export class AccountController {
   constructor(
     private readonly accountService: AccountService,
-    private readonly searchHistoryService: SearchHistoryService,
     private readonly menuService: MenusService,
     private readonly permissionService: PermissionsService,
-    private readonly userPermService: UserPermissionsService,
+    private readonly userPermService: UserPermissionsService
+    
   ) { }
+  @Post('create')
+  @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
+  @Roles(UserRole.MAIN_ADMIN)
+  @CheckPermissions([PermissionAction.CREATE, 'account'])
+  async create(@Body() dto: CreateAccountDto, @CurrentUser() user: Account) {
+    
+    const account = await this.accountService.create(dto, user.id);
+
+    
+    if (dto.role === UserRole.STAFF) {
+      await this.assignStaffPermissions(account.id);
+    }
+
+    return account;
+  }
+
+  private async assignStaffPermissions(accountId: string) {
+    
+    const [menus, perms] = await Promise.all([
+      this.menuService.findAll(),
+      this.permissionService.findAll(),
+    ]);
+
+    
+    const userPermissions = menus.flatMap((menu) =>
+      perms.map((perm) => ({
+        accountId,
+        menuId: menu.id,
+        permissionId: perm.id,
+      }))
+    );
+
+    await this.userPermService.create(userPermissions);
+  }
+
+
+
+
+
 
 
 

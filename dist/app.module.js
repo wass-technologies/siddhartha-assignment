@@ -46,6 +46,7 @@ const call_history_module_1 = require("./call-history/call-history.module");
 const banner_category_module_1 = require("./banner-category/banner-category.module");
 const class_module_1 = require("./class/class.module");
 const student_module_1 = require("./student/student.module");
+const staff_details_module_1 = require("./staff-details/staff-details.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -65,7 +66,7 @@ exports.AppModule = AppModule = __decorate([
                 password: process.env.BL_DB_PASS,
                 database: process.env.BL_DB_NAME,
                 entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                synchronize: false,
+                synchronize: true,
             }),
             cache_manager_1.CacheModule.register({
                 isGlobal: true,
@@ -101,6 +102,7 @@ exports.AppModule = AppModule = __decorate([
             banner_category_module_1.BannerCategoryModule,
             class_module_1.ClassModule,
             student_module_1.StudentModule,
+            staff_details_module_1.StaffDetailsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

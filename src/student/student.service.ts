@@ -5,16 +5,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Student } from './entities/student.entity';
 import { Brackets, Repository } from 'typeorm';
 import { ClassEntity } from 'src/class/entities/class.entity';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
 import { SchoolStatus } from 'src/enum';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
+import { School } from 'src/user-details/entities/user-detail.entity';
 
 @Injectable()
 export class StudentService {
   constructor(
     @InjectRepository (Student) private readonly studentrepo : Repository<Student>,
     @InjectRepository(ClassEntity) private readonly classRepo: Repository<ClassEntity>,
-    @InjectRepository(SchoolDetails) private readonly schoolRepo : Repository<SchoolDetails>,
+    @InjectRepository(School) private readonly schoolRepo : Repository<School>,
   ){}
 
   async addStudent(schoolId:string,classId:string, dto:CreateStudentDto, subAdmin:string ) {
@@ -113,7 +113,7 @@ export class StudentService {
 
 
   async updateStudent(schoolName:string,classId:string, dto:UpdateStudentDto,id: string, subAdmin:string ) {
-    const subSchool = await this.schoolRepo.findOne({where:{schoolName: schoolName},
+    const subSchool = await this.schoolRepo.findOne({where:{name: schoolName},
     });
     if(!subSchool){
       throw new NotFoundException('Sub School not found');
@@ -125,7 +125,7 @@ export class StudentService {
     if (subSchool.status=== SchoolStatus.INACTIVE){
       throw new ForbiddenException('School is not Active');
     }
-    const classEntity = await this.classRepo.findOne({where:{id: classId, school:{schoolName:schoolName}},
+    const classEntity = await this.classRepo.findOne({where:{id: classId, school:{name:schoolName}},
     relations:['subSchool']});
 
     if(!classEntity){

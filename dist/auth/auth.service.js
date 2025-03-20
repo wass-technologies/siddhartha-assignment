@@ -55,22 +55,18 @@ const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const bcrypt = __importStar(require("bcrypt"));
 const account_entity_1 = require("../account/entities/account.entity");
-const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
 const enum_1 = require("../enum");
 const login_history_entity_1 = require("../login-history/entities/login-history.entity");
-const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 const user_permission_entity_1 = require("../user-permissions/entities/user-permission.entity");
 const apiFeatures_utils_1 = __importDefault(require("../utils/apiFeatures.utils"));
 const typeorm_2 = require("typeorm");
 let AuthService = class AuthService {
-    constructor(jwtService, accountRepo, logRepo, upRepo, companyDetailRepo, userpermissionRepo, userDetailRepo, cacheManager) {
+    constructor(jwtService, accountRepo, logRepo, upRepo, userpermissionRepo, cacheManager) {
         this.jwtService = jwtService;
         this.accountRepo = accountRepo;
         this.logRepo = logRepo;
         this.upRepo = upRepo;
-        this.companyDetailRepo = companyDetailRepo;
         this.userpermissionRepo = userpermissionRepo;
-        this.userDetailRepo = userDetailRepo;
         this.cacheManager = cacheManager;
         this.getPermissions = async (accountId) => {
             let result = await this.cacheManager.get('userPermission' + accountId);
@@ -176,60 +172,6 @@ let AuthService = class AuthService {
     findPermission(accountId) {
         return this.getPermissions(accountId);
     }
-    async createUser(createUserDto, role, createdBy) {
-        if (!createUserDto.password) {
-            throw new common_1.BadRequestException('Password is required');
-        }
-        const existingAccount = await this.accountRepo.findOne({
-            where: { email: createUserDto.email },
-        });
-        if (existingAccount) {
-            throw new common_1.ForbiddenException('Email already exists');
-        }
-        const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-        const account = await this.accountRepo.save({
-            email: createUserDto.email,
-            name: createUserDto.name,
-            password: hashedPassword,
-            role,
-            createdBy,
-            status: enum_1.DefaultStatus.ACTIVE,
-        });
-        const userDetail = await this.userDetailRepo.save({
-            email: createUserDto.email,
-            name: createUserDto.name,
-            accountId: account.id,
-            assignedByAdminId: createdBy,
-            status: enum_1.DefaultStatus.ACTIVE,
-        });
-        return { account, userDetail };
-    }
-    async createMainAdmin(dto) {
-        const existingAdmin = await this.accountRepo.findOne({
-            where: { role: enum_1.UserRole.MAIN_ADMIN },
-        });
-        if (existingAdmin) {
-            throw new common_1.ForbiddenException('Main admin already exists');
-        }
-        return this.createUser(dto, enum_1.UserRole.MAIN_ADMIN);
-    }
-    async createSubAdmin(dto, createdBy) {
-        const school = await this.companyDetailRepo.findOne({ where: { id: dto.schoolId } });
-        if (!school) {
-            throw new common_1.NotFoundException('School not found!');
-        }
-        if (school.subAdmin) {
-            await this.accountRepo.delete(school.subAdmin.id);
-        }
-        const { account } = await this.createUser(dto, enum_1.UserRole.SUB_ADMIN, createdBy);
-        school.subAdmin = account;
-        school.accountId = account.id;
-        await this.companyDetailRepo.save(school);
-        return { message: 'Sub Admin assigned to the school', account };
-    }
-    async createStaff(dto, createdBy) {
-        return this.createUser(dto, enum_1.UserRole.STAFF, createdBy);
-    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
@@ -237,13 +179,9 @@ exports.AuthService = AuthService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(account_entity_1.Account)),
     __param(2, (0, typeorm_1.InjectRepository)(login_history_entity_1.LoginHistory)),
     __param(3, (0, typeorm_1.InjectRepository)(user_permission_entity_1.UserPermission)),
-    __param(4, (0, typeorm_1.InjectRepository)(company_detail_entity_1.SchoolDetails)),
-    __param(5, (0, typeorm_1.InjectRepository)(user_permission_entity_1.UserPermission)),
-    __param(6, (0, typeorm_1.InjectRepository)(user_detail_entity_1.UserDetail)),
-    __param(7, (0, common_1.Inject)(cache_manager_1.CACHE_MANAGER)),
+    __param(4, (0, typeorm_1.InjectRepository)(user_permission_entity_1.UserPermission)),
+    __param(5, (0, common_1.Inject)(cache_manager_1.CACHE_MANAGER)),
     __metadata("design:paramtypes", [jwt_1.JwtService,
-        typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

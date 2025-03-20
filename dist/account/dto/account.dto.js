@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginDto = exports.CreateUserDto = exports.CreateSubAdminDto = exports.CreateMainAdminDto = void 0;
+exports.CreateAccountDto = exports.LoginDto = exports.CreateUserDto = exports.CreateSubAdminDto = exports.CreateMainAdminDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateMainAdminDto {
 }
@@ -75,4 +75,7 @@ __decorate([
     (0, class_validator_1.MinLength)(6, { message: 'Password must be at least 6 characters' }),
     __metadata("design:type", String)
 ], LoginDto.prototype, "password", void 0);
+class CreateAccountDto {
+}
+exports.CreateAccountDto = CreateAccountDto;
 //# sourceMappingURL=account.dto.js.map

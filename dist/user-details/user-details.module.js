@@ -11,23 +11,24 @@ const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const typeorm_1 = require("@nestjs/typeorm");
 const auth_module_1 = require("../auth/auth.module");
+const account_entity_1 = require("../account/entities/account.entity");
 const user_detail_entity_1 = require("./entities/user-detail.entity");
 const user_details_controller_1 = require("./user-details.controller");
 const user_details_service_1 = require("./user-details.service");
-const account_entity_1 = require("../account/entities/account.entity");
+const auth_entity_1 = require("../auth/entities/auth.entity");
 let UserDetailsModule = class UserDetailsModule {
 };
 exports.UserDetailsModule = UserDetailsModule;
 exports.UserDetailsModule = UserDetailsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([user_detail_entity_1.UserDetail, account_entity_1.Account]),
+            typeorm_1.TypeOrmModule.forFeature([user_detail_entity_1.School, account_entity_1.Account, auth_entity_1.Auth]),
             auth_module_1.AuthModule,
             platform_express_1.MulterModule.register({ dest: './uploads/UserDetail' }),
         ],
-        controllers: [user_details_controller_1.UserDetailsController],
-        providers: [user_details_service_1.UserDetailsService],
-        exports: [user_details_service_1.UserDetailsService],
+        controllers: [user_details_controller_1.SchoolController],
+        providers: [user_details_service_1.SchoolService],
+        exports: [user_details_service_1.SchoolService],
     })
 ], UserDetailsModule);
 //# sourceMappingURL=user-details.module.js.map

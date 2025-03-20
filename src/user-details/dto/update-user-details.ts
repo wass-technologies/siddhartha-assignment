@@ -8,9 +8,14 @@ import {
   IsNumber,
   Max,
   Min,
+  IsEnum,
+  IsEmail,
+  IsArray,
 } from 'class-validator';
+import { SchoolStatus } from 'src/enum';
 
-export class UpdateUserDetailDto {
+export class SchoolDto {
+
   @IsOptional()
   @IsString()
   @MinLength(0)
@@ -18,14 +23,54 @@ export class UpdateUserDetailDto {
   name: string;
 
   @IsOptional()
-  @IsString()
+  @IsEmail()
   @MinLength(0)
   @MaxLength(50)
   email: string;
 
 
   @IsOptional()
-  accountId: string;
+  @IsString()
+  @MinLength(0)
+  @MaxLength(50)
+  state: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(0)
+  @MaxLength(50)
+  city: string;
+  
+  @IsOptional()
+  @IsString()
+  @MinLength(0)
+  @MaxLength(50)
+  area: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(0)
+  @MaxLength(200)
+  address1: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(0)
+  @MaxLength(200)
+  address2: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(0)
+  @MaxLength(50)
+  pincode: string;
+
+}
+
+export class StatusDto {
+  @IsNotEmpty()
+  @IsEnum(SchoolStatus)
+  status: SchoolStatus;
 }
 
 export class PaginationSDto {
@@ -44,4 +89,27 @@ export class PaginationSDto {
 
   @IsOptional()
   keyword: string;
+
+  @IsNotEmpty()
+  @IsEnum(SchoolStatus)
+  status: SchoolStatus;
+}
+
+export class PaginationDto {
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(10)
+  @Max(50)
+  limit: number;
+
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  offset: number;
+
+  @IsOptional()
+  keyword: string;
+
 }

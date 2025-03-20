@@ -13,15 +13,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const auth_module_1 = require("../auth/auth.module");
 const company_details_controller_1 = require("./company-details.controller");
 const company_details_service_1 = require("./company-details.service");
-const company_detail_entity_1 = require("./entities/company-detail.entity");
 const account_entity_1 = require("../account/entities/account.entity");
+const company_detail_entity_1 = require("./entities/company-detail.entity");
 let CompanyDetailsModule = class CompanyDetailsModule {
 };
 exports.CompanyDetailsModule = CompanyDetailsModule;
 exports.CompanyDetailsModule = CompanyDetailsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([company_detail_entity_1.SchoolDetails, account_entity_1.Account]),
+            typeorm_1.TypeOrmModule.forFeature([company_detail_entity_1.SubAdmin, account_entity_1.Account]),
             auth_module_1.AuthModule,
             platform_express_1.MulterModule.register({ dest: './uploads/companyDetail' }),
         ],

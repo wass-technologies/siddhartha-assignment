@@ -1,6 +1,7 @@
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+
 
 import { Student } from 'src/student/entities/student.entity';
+import { School } from 'src/user-details/entities/user-detail.entity';
 import {
   Column,
   CreateDateColumn,
@@ -19,10 +20,10 @@ export class ClassEntity {
   @Column({ type: 'varchar', length: 100 })
   className: string;
 
-  @ManyToOne(() => SchoolDetails, (company) => company.classes, {
+  @ManyToOne(() => School, (company) => company.classes, {
     onDelete: 'CASCADE',
   })
-  school: SchoolDetails;
+  school: School;
 
   @OneToMany(() => Student, (student) => student.class)
   students: Student[];

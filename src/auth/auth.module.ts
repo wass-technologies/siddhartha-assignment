@@ -14,9 +14,12 @@ import { UserPermission } from 'src/user-permissions/entities/user-permission.en
 import { CaslAbilityFactory } from './factory/casl-ability.factory';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { JwtStrategy } from './strategy/jwt.strategy';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
-import { UserDetail } from 'src/user-details/entities/user-detail.entity';
+
 import { CompanySchedule } from 'src/company-schedule/entities/company-schedule.entity';
+
+import { StaffDetailsModule } from 'src/staff-details/staff-details.module';
+import { School } from 'src/user-details/entities/user-detail.entity';
+
 
 @Module({
   imports: [
@@ -24,8 +27,7 @@ import { CompanySchedule } from 'src/company-schedule/entities/company-schedule.
       Account,
       LoginHistory,
       UserPermission,
-      SchoolDetails,
-      UserDetail,
+      School,
       CompanySchedule
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -44,7 +46,7 @@ import { CompanySchedule } from 'src/company-schedule/entities/company-schedule.
     HttpModule.register({
       timeout: 5000,
       maxRedirects: 5,
-    }),
+    }),StaffDetailsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, CaslAbilityFactory, PermissionsGuard],

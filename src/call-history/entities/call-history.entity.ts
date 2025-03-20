@@ -1,5 +1,5 @@
 import { Account } from 'src/account/entities/account.entity';
-import { SchoolDetails } from 'src/company-details/entities/company-detail.entity';
+import { SubAdmin } from 'src/company-details/entities/company-detail.entity';
 import { UserRole } from 'src/enum';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 

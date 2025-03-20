@@ -6,6 +6,7 @@ var UserRole;
     UserRole["MAIN_ADMIN"] = "MAIN_ADMIN";
     UserRole["SUB_ADMIN"] = "SUB_ADMIN";
     UserRole["STAFF"] = "STAFF";
+    UserRole["SCHOOL"] = "SCHOOL";
 })(UserRole || (exports.UserRole = UserRole = {}));
 var DefaultStatus;
 (function (DefaultStatus) {

@@ -26,26 +26,11 @@ let LeedController = class LeedController {
     constructor(leedService) {
         this.leedService = leedService;
     }
-    create(companyDetailId, dto, user) {
-        return this.leedService.create(dto, companyDetailId, user.id);
-    }
     findByUser(dto, user) {
         return this.leedService.findByUser(dto, user.id);
     }
 };
 exports.LeedController = LeedController;
-__decorate([
-    (0, common_1.Post)(':companyDetailId'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
-    __param(0, (0, common_1.Param)('companyDetailId')),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, create_leed_dto_1.CreateLeedDto,
-        account_entity_1.Account]),
-    __metadata("design:returntype", void 0)
-], LeedController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('user'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard),

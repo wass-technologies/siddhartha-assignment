@@ -36,20 +36,6 @@ export class AuthController {
     return this.authService.staffSignIn(dto);
   }
 
-  @Post('admin/reg')
-  async createMainAdmin(@Body() dto: CreateMainAdminDto) {
-    return this.authService.createMainAdmin(dto);
-  }
-
-  @Post('sub-admin/reg')
-  async createSUbadmin(@Body() dto:CreateSubAdminDto ) {
-    return this.authService.createSubAdmin(dto,'MAIN_ADMIN');
-  }
-
-  @Post('staff/reg')
-  async createStaff(@Body() dto:CreateUserDto) {
-    return this.authService.createStaff(dto,'MAIN_ADMIN');
-  }
 
 
 
