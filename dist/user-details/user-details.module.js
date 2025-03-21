@@ -16,13 +16,16 @@ const user_detail_entity_1 = require("./entities/user-detail.entity");
 const user_details_controller_1 = require("./user-details.controller");
 const user_details_service_1 = require("./user-details.service");
 const auth_entity_1 = require("../auth/entities/auth.entity");
+const class_entity_1 = require("../class/entities/class.entity");
+const student_entity_1 = require("../student/entities/student.entity");
+const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
 let UserDetailsModule = class UserDetailsModule {
 };
 exports.UserDetailsModule = UserDetailsModule;
 exports.UserDetailsModule = UserDetailsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([user_detail_entity_1.School, account_entity_1.Account, auth_entity_1.Auth]),
+            typeorm_1.TypeOrmModule.forFeature([user_detail_entity_1.School, account_entity_1.Account, auth_entity_1.Auth, class_entity_1.ClassEntity, student_entity_1.Student, company_detail_entity_1.SubAdmin]),
             auth_module_1.AuthModule,
             platform_express_1.MulterModule.register({ dest: './uploads/UserDetail' }),
         ],

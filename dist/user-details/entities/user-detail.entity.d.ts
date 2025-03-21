@@ -17,6 +17,6 @@ export declare class School {
     createdAt: Date;
     updatedAt: Date;
     account: Account;
-    subAdmins: SubAdmin[];
+    subAdmin: SubAdmin;
     classes: ClassEntity[];
 }

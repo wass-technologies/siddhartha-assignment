@@ -29,6 +29,9 @@ let AuthController = class AuthController {
     async staffLogin(dto) {
         return this.authService.staffSignIn(dto);
     }
+    async schoolLogin(dto) {
+        return this.authService.schoolLoin(dto);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -52,6 +55,13 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.signIn]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "staffLogin", null);
+__decorate([
+    (0, common_1.Post)('school/login'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [login_dto_1.signIn]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "schoolLogin", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

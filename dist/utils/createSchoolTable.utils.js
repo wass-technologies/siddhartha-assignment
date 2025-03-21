@@ -19,7 +19,7 @@ function generateHeader(doc, schools) {
     const tableColumns = ['School Name', 'Address', 'Status'];
     const columnWidths = [200, 150, 100];
     const tableRows = schools.map((school) => [
-        school.schoolName,
+        school.name,
         school.address1 || 'N/A',
         school.status,
     ]);

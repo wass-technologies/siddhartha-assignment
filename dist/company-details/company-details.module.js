@@ -13,21 +13,23 @@ const typeorm_1 = require("@nestjs/typeorm");
 const auth_module_1 = require("../auth/auth.module");
 const company_details_controller_1 = require("./company-details.controller");
 const company_details_service_1 = require("./company-details.service");
-const account_entity_1 = require("../account/entities/account.entity");
 const company_detail_entity_1 = require("./entities/company-detail.entity");
+const student_entity_1 = require("../student/entities/student.entity");
+const class_entity_1 = require("../class/entities/class.entity");
+const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 let CompanyDetailsModule = class CompanyDetailsModule {
 };
 exports.CompanyDetailsModule = CompanyDetailsModule;
 exports.CompanyDetailsModule = CompanyDetailsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([company_detail_entity_1.SubAdmin, account_entity_1.Account]),
+            typeorm_1.TypeOrmModule.forFeature([company_detail_entity_1.SubAdmin, student_entity_1.Student, class_entity_1.ClassEntity, user_detail_entity_1.School]),
             auth_module_1.AuthModule,
             platform_express_1.MulterModule.register({ dest: './uploads/companyDetail' }),
         ],
-        controllers: [company_details_controller_1.SchoolDetailsController],
-        providers: [company_details_service_1.SchoolDetailsService],
-        exports: [company_details_service_1.SchoolDetailsService],
+        controllers: [company_details_controller_1.SubAdminDetailsController],
+        providers: [company_details_service_1.SubAdminDetailsService],
+        exports: [company_details_service_1.SubAdminDetailsService],
     })
 ], CompanyDetailsModule);
 //# sourceMappingURL=company-details.module.js.map

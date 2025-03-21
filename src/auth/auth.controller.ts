@@ -36,6 +36,11 @@ export class AuthController {
     return this.authService.staffSignIn(dto);
   }
 
+  @Post('school/login')
+  async schoolLogin(@Body() dto: signIn) {
+    return this.authService.schoolLoin(dto);
+  }
+
 
 
 

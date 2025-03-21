@@ -13,6 +13,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { SchoolStatus } from 'src/enum';
+import { IsUUID } from 'class-validator';
 
 export class SchoolDto {
 
@@ -20,13 +21,13 @@ export class SchoolDto {
   @IsString()
   @MinLength(0)
   @MaxLength(50)
-  name: string;
+  name?: string;
 
   @IsOptional()
   @IsEmail()
   @MinLength(0)
   @MaxLength(50)
-  email: string;
+  email?: string;
 
 
   @IsOptional()
@@ -112,4 +113,13 @@ export class PaginationDto {
   @IsOptional()
   keyword: string;
 
+}
+
+
+export class AssignSubAdminDto {
+  @IsUUID()
+  schoolId: string;
+
+  @IsUUID()
+  subAdminId: string;
 }

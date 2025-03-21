@@ -17,6 +17,8 @@ export class UserPermission {
   @Column({ type: 'uuid', nullable: true })
   accountId: string;
 
+  @Column({ type: 'int', nullable: true })
+  menuId: number;
 
   @Column({ type: 'int', nullable: true })
   permissionId: number;

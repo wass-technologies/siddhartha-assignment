@@ -12,20 +12,90 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SchoolDetailsService = void 0;
+exports.SubAdminDetailsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const account_entity_1 = require("../account/entities/account.entity");
-let SchoolDetailsService = class SchoolDetailsService {
-    constructor(accountRepo) {
-        this.accountRepo = accountRepo;
+const class_entity_1 = require("../class/entities/class.entity");
+const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
+const student_entity_1 = require("../student/entities/student.entity");
+let SubAdminDetailsService = class SubAdminDetailsService {
+    constructor(classRepo, schoolRepo, studentRepo) {
+        this.classRepo = classRepo;
+        this.schoolRepo = schoolRepo;
+        this.studentRepo = studentRepo;
+    }
+    async getSchools(userId, paginationDto) {
+        const { limit, offset, keyword } = paginationDto;
+        const query = this.schoolRepo
+            .createQueryBuilder('school')
+            .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+            .where('subAdmin.accountId = :userId', { userId })
+            .orderBy('school.createdAt', 'DESC')
+            .skip(offset)
+            .take(limit);
+        if (keyword) {
+            query.andWhere('LOWER(school.name) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
+        }
+        const [schools, total] = await query.getManyAndCount();
+        return { total, schools };
+    }
+    async findSchool(userId, schoolId) {
+        var _a;
+        const school = await this.schoolRepo.findOne({
+            where: { id: schoolId },
+            relations: ['subAdmin'],
+        });
+        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
+            throw new common_1.ForbiddenException('You do not have permission to access this school.');
+        }
+        return school;
+    }
+    async updateSchoolDetails(userId, schoolId, dto) {
+        var _a;
+        const school = await this.schoolRepo.findOne({
+            where: { id: schoolId },
+            relations: ['subAdmin'],
+        });
+        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
+            throw new common_1.ForbiddenException('You do not have permission to update this school.');
+        }
+        Object.assign(school, dto);
+        return this.schoolRepo.save(school);
+    }
+    async updateSchoolStatus(userId, schoolId, status) {
+        var _a;
+        const school = await this.schoolRepo.findOne({
+            where: { id: schoolId },
+            relations: ['subAdmin'],
+        });
+        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
+            throw new common_1.ForbiddenException('You do not have permission to update this school status.');
+        }
+        school.status = status;
+        return this.schoolRepo.save(school);
+    }
+    async deleteSchool(userId, schoolId) {
+        var _a;
+        const school = await this.schoolRepo.findOne({
+            where: { id: schoolId },
+            relations: ['subAdmin'],
+        });
+        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
+            throw new common_1.ForbiddenException('You do not have permission to delete this school.');
+        }
+        await this.schoolRepo.remove(school);
+        return { message: 'School deleted successfully' };
     }
 };
-exports.SchoolDetailsService = SchoolDetailsService;
-exports.SchoolDetailsService = SchoolDetailsService = __decorate([
+exports.SubAdminDetailsService = SubAdminDetailsService;
+exports.SubAdminDetailsService = SubAdminDetailsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(account_entity_1.Account)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
-], SchoolDetailsService);
+    __param(0, (0, typeorm_1.InjectRepository)(class_entity_1.ClassEntity)),
+    __param(1, (0, typeorm_1.InjectRepository)(user_detail_entity_1.School)),
+    __param(2, (0, typeorm_1.InjectRepository)(student_entity_1.Student)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
+], SubAdminDetailsService);
 //# sourceMappingURL=company-details.service.js.map

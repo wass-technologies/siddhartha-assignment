@@ -32,7 +32,7 @@ let UserPermissionsController = class UserPermissionsController {
             menuItem.userPermission.forEach((permItem) => {
                 obj.push({
                     id: permItem.id,
-                    accountId: permItem.accountId,
+                    rootAccountId: permItem.accountId,
                     menuId: menuItem.id,
                     permissionId: permItem.permission.id,
                     status: permItem.status,

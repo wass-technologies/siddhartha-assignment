@@ -1,7 +1,7 @@
 import { SchoolStatus } from 'src/enum';
 export declare class SchoolDto {
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     state: string;
     city: string;
     area: string;
@@ -22,4 +22,8 @@ export declare class PaginationDto {
     limit: number;
     offset: number;
     keyword: string;
+}
+export declare class AssignSubAdminDto {
+    schoolId: string;
+    subAdminId: string;
 }

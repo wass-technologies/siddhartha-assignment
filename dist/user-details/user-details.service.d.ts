@@ -1,26 +1,28 @@
 import { Account } from 'src/account/entities/account.entity';
 import { Repository } from 'typeorm';
-import { PaginationDto, PaginationSDto, SchoolDto, StatusDto } from './dto/update-user-details';
+import { PaginationDto } from './dto/update-user-details';
 import { School } from './entities/user-detail.entity';
 import { Response } from 'express';
+import { ClassEntity } from 'src/class/entities/class.entity';
+import { Student } from 'src/student/entities/student.entity';
+import { SubAdmin } from 'src/company-details/entities/company-detail.entity';
 export declare class SchoolService {
     private readonly repo;
     private readonly accountrepo;
-    constructor(repo: Repository<School>, accountrepo: Repository<Account>);
-    createSchool(dto: SchoolDto): Promise<School>;
-    findList(dto: PaginationDto): Promise<{
-        result: School[];
+    private readonly classRepo;
+    private readonly studentRepo;
+    private subAdminRepository;
+    constructor(repo: Repository<School>, accountrepo: Repository<Account>, classRepo: Repository<ClassEntity>, studentRepo: Repository<Student>, subAdminRepository: Repository<SubAdmin>);
+    getSchoolDetails(userId: string): Promise<School>;
+    getTotalClasses(userId: string, paginationDto: PaginationDto): Promise<{
+        result: ClassEntity[];
         total: number;
     }>;
-    findListByStatus(dto: PaginationSDto): Promise<{
-        result: School[];
-        total: number;
+    getClassWiseStudentList(userId: string, classId: string, paginationDto: PaginationDto): Promise<{
+        totalStudents: number;
+        students: ClassEntity[];
     }>;
-    findSchool(id: string): Promise<School>;
-    update(id: string, dto: SchoolDto): Promise<School & SchoolDto>;
-    status(id: string, dto: StatusDto): Promise<School & StatusDto>;
-    deleteSchool(id: string): Promise<{
-        message: string;
-    }>;
+    getStudentById(userId: string, studentId: string): Promise<Student>;
+    assignSubAdmin(schoolId: string, subAdminId: string): Promise<School>;
     generateSchoolListPdf(res: Response): Promise<void>;
 }

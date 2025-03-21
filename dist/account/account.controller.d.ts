@@ -12,7 +12,6 @@ export declare class AccountController {
     private readonly userPermService;
     constructor(accountService: AccountService, menuService: MenusService, permissionService: PermissionsService, userPermService: UserPermissionsService);
     create(dto: CreateAccountDto, user: Account): Promise<any>;
-    private assignStaffPermissions;
     getAllSubAdmins(paginationDto: PaginationDto): Promise<{
         result: Account[];
         total: number;

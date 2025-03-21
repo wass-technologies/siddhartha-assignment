@@ -1,211 +1,98 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Like, Repository } from 'typeorm';
-import {
-
-  PaginationDto,
- 
-  PaginationSDto,
- 
-  SchoolDetailDto,
-  StatusDto,
-} from './dto/company-detail.dto';
-
+import { PaginationDto,} from './dto/company-detail.dto';
 import { Account } from 'src/account/entities/account.entity';
 import { SchoolStatus, UserRole } from 'src/enum';
-import { createSchoolTable } from 'src/utils/createSchoolTable.utils';
-import { Response } from 'express';
+import { ClassEntity } from 'src/class/entities/class.entity';
+import { School } from 'src/user-details/entities/user-detail.entity';
+import { Student } from 'src/student/entities/student.entity';
+import { SchoolDto } from 'src/user-details/dto/update-user-details';
+import { SubAdmin } from './entities/company-detail.entity';
 
 
 @Injectable()
-export class SchoolDetailsService {
+export class SubAdminDetailsService {
   constructor(
+    @InjectRepository (ClassEntity) private readonly classRepo:Repository<ClassEntity>,
+    @InjectRepository(School) private readonly schoolRepo: Repository<School>,
+    @InjectRepository(Student) private readonly studentRepo:Repository<Student>
+  ) {} 
 
-    @InjectRepository(Account)
-    private readonly accountRepo: Repository<Account>,
-  ) {}
+  async getSchools(userId: string, paginationDto: PaginationDto) {
+    const { limit, offset, keyword } = paginationDto;
 
-  // async createSchool(dto: SchoolDetailDto) {
- 
-  //   const existingSchool = await this.repo.findOne({ where: { schoolName: dto.schoolName } });
-  
-  //   if (existingSchool) {
-  //     throw new ConflictException(`School with name "${dto.schoolName}" already exists!`);
-  //   }
- 
-  //   const school = this.repo.create(dto);
-  //   return this.repo.save(school);
-  // }
+    const query = this.schoolRepo
+        .createQueryBuilder('school')
+        .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+        .where('subAdmin.accountId = :userId', { userId })
+        .orderBy('school.createdAt', 'DESC')
+        .skip(offset)
+        .take(limit);
 
-  // async findList(dto: PaginationDto) {
-  //   const keyword = dto.keyword || '';
-  //   const query = this.repo
-  //     .createQueryBuilder('schoolDetails')
-  //     .leftJoinAndSelect('schoolDetails.subAdmin', 'subAdmin')
-  //     .leftJoinAndSelect('schoolDetails.companySchedule', 'companySchedule')
-  //     .leftJoinAndSelect('schoolDetails.leed', 'leed')
-  //     .leftJoinAndSelect('schoolDetails.classes', 'classes')
-  //     .select([
-  //       'schoolDetails.id',
-  //       'schoolDetails.schoolName',
-  //       'schoolDetails.address1',
-  //       'schoolDetails.address2',
-  //       'schoolDetails.state',
-  //       'schoolDetails.city',
-  //       'schoolDetails.area',
-  //       'schoolDetails.pincode',
-  //       'schoolDetails.schoolDesc',
-  //       'schoolDetails.status',
-  //       'schoolDetails.accountId',
-  //       'schoolDetails.createdAt',
-  //       'schoolDetails.updatedAt',
-  //       'subAdmin.id',
-  //       'subAdmin.name',
-  //       'companySchedule.id',
-  //       'leed.id',
-  //       'classes.id',
-  //     ]);
-  
-  //   query.andWhere(
-  //     new Brackets((qb) => {
-  //       qb.where('schoolDetails.schoolName LIKE :schoolName', {
-  //         schoolName: '%' + keyword + '%',
-  //       });
-  //     }),
-  //   );
-  
-  //   const [result, total] = await query
-  //     .skip(dto.offset)
-  //     .take(dto.limit)
-  //     .orderBy({ 'schoolDetails.schoolName': 'ASC' })
-  //     .getManyAndCount();
-  
-  //   return { result, total };
-  // }
+    if (keyword) {
+        query.andWhere('LOWER(school.name) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
+    }
 
+    const [schools, total] = await query.getManyAndCount();
 
+    return { total, schools };
+}
 
+async findSchool(userId: string, schoolId: string) {
+  const school = await this.schoolRepo.findOne({
+    where: { id: schoolId },
+    relations: ['subAdmin'],
+  });
 
-  // async findListByStatus(dto: PaginationSDto) {
-  //   const keyword = dto.keyword || '';
-  //   const query = this.repo
-  //     .createQueryBuilder('schoolDetails')
-  //     .leftJoinAndSelect('schoolDetails.subAdmin', 'subAdmin')
-  //     .leftJoinAndSelect('schoolDetails.classes', 'classes')
-  //     .select([
-  //       'schoolDetails.id',
-  //       'schoolDetails.schoolName',
-  //       'schoolDetails.address1',
-  //       'schoolDetails.address2',
-  //       'schoolDetails.state',
-  //       'schoolDetails.city',
-  //       'schoolDetails.area',
-  //       'schoolDetails.pincode',
-  //       'schoolDetails.schoolDesc',
-  //       'schoolDetails.status',
-  //       'schoolDetails.accountId',
-  //       'schoolDetails.createdAt',
-  //       'schoolDetails.updatedAt',
-  //       'subAdmin.id',
-  //       'subAdmin.name',
-  //       'classes.id',
-  //     ])
-  //     .where('schoolDetails.status = :status', { status: dto.status });
-  //     if(dto.keyword){
-  //       query.andWhere(
-  //         new Brackets((qb) => {
-  //           qb.where('schoolDetails.schoolName LIKE :schoolName', {
-  //             schoolName: '%' + keyword + '%',
-  //           });
-  //         }),
-  //       );
+  if (!school || school.subAdmin?.accountId !== userId) {
+    throw new ForbiddenException('You do not have permission to access this school.');
+  }
 
-  // }
+  return school;
+}
 
-  //   const [result, total] = await query
-  //     .skip(dto.offset)
-  //     .take(dto.limit)
-  //     .orderBy({ 'schoolDetails.schoolName': 'ASC' })
-  //     .getManyAndCount();
+async updateSchoolDetails(userId: string, schoolId: string, dto: SchoolDto) {
+  const school = await this.schoolRepo.findOne({
+    where: { id: schoolId },
+    relations: ['subAdmin'],
+  });
 
-  //   return { result, total };
-  // }
-  
+  if (!school || school.subAdmin?.accountId !== userId) {
+    throw new ForbiddenException('You do not have permission to update this school.');
+  }
 
+  Object.assign(school, dto);
+  return this.schoolRepo.save(school);
+}
 
+async updateSchoolStatus(userId: string, schoolId: string, status: SchoolStatus) {
+  const school = await this.schoolRepo.findOne({
+    where: { id: schoolId },
+    relations: ['subAdmin'],
+  });
 
+  if (!school || school.subAdmin?.accountId !== userId) {
+    throw new ForbiddenException('You do not have permission to update this school status.');
+  }
 
-  // async findSchool(id: string) {
-  //   const result = await this.repo
-  //     .createQueryBuilder('schoolDetails')
-  //     .where('schoolDetails.accountId = :accountId', { accountId: id })
-  //     .getOne();
-  //   if (!result) {
-  //     throw new NotFoundException('School not found!');
-  //   }
-  //   return result;
-  // }
+  school.status = status;
+  return this.schoolRepo.save(school);
+}
 
-  // async update(id: string, dto: SchoolDetailDto) {
-  //   const result = await this.repo.findOne({ where: { accountId: id } });
-  //   if (!result) {
-  //     throw new NotFoundException('School not found!');
-  //   }
-  //   const obj = Object.assign(result, dto);
-  //   return this.repo.save(obj);
-  // }
-  
+async deleteSchool(userId: string, schoolId: string) {
+  const school = await this.schoolRepo.findOne({
+    where: { id: schoolId },
+    relations: ['subAdmin'],
+  });
 
-  // async status(id: string, dto: StatusDto) {
-  //   const result = await this.repo.findOne({ where: { accountId: id } });
-  //   if (!result) {
-  //     throw new NotFoundException('School detail not found!');
-  //   }
-  //   const obj = Object.assign(result, dto);
-  //   return this.repo.save(obj);
-  // }
+  if (!school || school.subAdmin?.accountId !== userId) {
+    throw new ForbiddenException('You do not have permission to delete this school.');
+  }
 
-  // async deleteSchool(id: string) {
-  //   const result = await this.repo.findOne({ where: { accountId: id } });
-  //   if (!result) {
-  //     throw new NotFoundException('School not found!');
-  //   }
-  //   await this.repo.remove(result);
-  //   return { message: 'School deleted successfully!' };
-  // }
-
-  // async generateSchoolListPdf(res: Response) {
-  //   const schools = await this.repo.find();
-
-  //   if (schools.length === 0) {
-  //     throw new NotFoundException('No schools found');
-  //   }
-
-  //   const doc = await createSchoolTable(schools);
-
-  //   res.setHeader('Content-Disposition', 'attachment; filename="schools_list.pdf"');
-  //   res.setHeader('Content-Type', 'application/pdf');
-
-  //   doc.pipe(res);
-  //   doc.end();
-  // }
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
+  await this.schoolRepo.remove(school);
+  return { message: 'School deleted successfully' };
+}
 
 
 }

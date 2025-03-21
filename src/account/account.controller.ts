@@ -1,13 +1,9 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Post,
-  Put,
-  Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,7 +19,6 @@ import { UserPermissionsService } from 'src/user-permissions/user-permissions.se
 import { AccountService } from './account.service';
 
 import { Account } from './entities/account.entity';
-import { SearchHistoryService } from 'src/search-history/search-history.service';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
 import { CreateAccountDto } from './dto/account.dto';
 
@@ -41,58 +36,37 @@ export class AccountController {
   @Roles(UserRole.MAIN_ADMIN)
   @CheckPermissions([PermissionAction.CREATE, 'account'])
   async create(@Body() dto: CreateAccountDto, @CurrentUser() user: Account) {
-    
     const account = await this.accountService.create(dto, user.id);
 
-    
     if (dto.role === UserRole.STAFF) {
-      await this.assignStaffPermissions(account.id);
+      const menus = await this.menuService.findAll();
+      const perms = await this.permissionService.findAll();
+      const obj = [];
+      menus.forEach((menu) => {
+        perms.forEach((perm) => {
+          obj.push({
+            accountId: account.id,
+            menuId: menu.id,
+            permissionId: perm.id,
+          });
+        });
+      });
+      await this.userPermService.create(obj);
+  
     }
-
     return account;
   }
-
-  private async assignStaffPermissions(accountId: string) {
-    console.log("Assigning staff permissions for:", accountId);
-    
-    const [menus, perms] = await Promise.all([
-      this.menuService.findAll(),
-      this.permissionService.findAll(),
-    ]);
-
-    
-    const userPermissions = menus.flatMap((menu) =>
-      perms.map((perm) => ({
-        accountId,
-        menuId: menu.id,
-        permissionId: perm.id,
-      }))
-    );
-  await this.userPermService.create(userPermissions);
-
-  }
-
-
-
-
-
-
-
 
   @Get('sub-admins')
   async getAllSubAdmins(@Body() paginationDto: PaginationDto) {
     return this.accountService.findAllSubAdmins(paginationDto);
   }
-
   @Get('sub-admins/:id')
   async getSubAdminById(@Param('id') id: string) {
     return this.accountService.subAdminDetail(id);
   }
-
   @Get('staff/:id')
   async getStaffById(@Param('id') id: string) {
     return this.accountService.staffDetail(id);
   }
-
-
 }

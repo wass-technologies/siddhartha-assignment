@@ -20,7 +20,7 @@ export class School {
 
   @Column()
   name: string;
-  
+
   @Column()
   email:string;
 
@@ -65,8 +65,12 @@ export class School {
   )
   account: Account;
 
-  @OneToMany(() => SubAdmin, (subAdmin) => subAdmin.school)
-  subAdmins: SubAdmin[];  
+@ManyToOne(() => SubAdmin, (subAdmin) => subAdmin.schools, {
+  cascade: true, 
+  onDelete: 'CASCADE', 
+  onUpdate: 'CASCADE'
+})
+subAdmin: SubAdmin;  
 
   @OneToMany(() => ClassEntity, (classEntity) => classEntity.school)
   classes: ClassEntity[];

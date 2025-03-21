@@ -12,4 +12,7 @@ export declare class AuthController {
     staffLogin(dto: signIn): Promise<{
         token: string;
     }>;
+    schoolLogin(dto: signIn): Promise<{
+        token: string;
+    }>;
 }

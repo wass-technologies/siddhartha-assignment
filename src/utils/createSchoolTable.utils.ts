@@ -26,7 +26,7 @@ function generateHeader(doc, schools) {
 
   // Map school data to table rows
   const tableRows = schools.map((school) => [
-    school.schoolName,
+    school.name,
     school.address1|| 'N/A',
     school.status,
   ]);

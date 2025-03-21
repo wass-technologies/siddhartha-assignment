@@ -9,10 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaginationDto = exports.PaginationSDto = exports.StatusDto = exports.SchoolDto = void 0;
+exports.AssignSubAdminDto = exports.PaginationDto = exports.PaginationSDto = exports.StatusDto = exports.SchoolDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const enum_1 = require("../../enum");
+const class_validator_2 = require("class-validator");
 class SchoolDto {
 }
 exports.SchoolDto = SchoolDto;
@@ -129,4 +130,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PaginationDto.prototype, "keyword", void 0);
+class AssignSubAdminDto {
+}
+exports.AssignSubAdminDto = AssignSubAdminDto;
+__decorate([
+    (0, class_validator_2.IsUUID)(),
+    __metadata("design:type", String)
+], AssignSubAdminDto.prototype, "schoolId", void 0);
+__decorate([
+    (0, class_validator_2.IsUUID)(),
+    __metadata("design:type", String)
+], AssignSubAdminDto.prototype, "subAdminId", void 0);
 //# sourceMappingURL=update-user-details.js.map

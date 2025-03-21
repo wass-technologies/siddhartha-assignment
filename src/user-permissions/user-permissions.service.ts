@@ -35,13 +35,4 @@ export class UserPermissionsService {
   private delPermissions(id: string) {
     this.cacheManager.del('userPermission' + id);
   }
-  async assignDefaultStaffPermissions(accountId: string) {
-    const defaultPermissions = [
-      { accountId, permissionId: 1, status: true }, // Example permission
-      { accountId, permissionId: 2, status: true }, // Add necessary permissions
-    ];
-
-    await this.repo.save(defaultPermissions);
-}
-
 }

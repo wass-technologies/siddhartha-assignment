@@ -9,5 +9,4 @@ export declare class UserPermissionsService {
     create(dto: CreateUserPermissionDto[]): Promise<(CreateUserPermissionDto & UserPermission)[]>;
     update(dto: UpdateUserPermissionDto[]): Promise<(UpdateUserPermissionDto & UserPermission)[]>;
     private delPermissions;
-    assignDefaultStaffPermissions(accountId: string): Promise<void>;
 }

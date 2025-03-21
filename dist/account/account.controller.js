@@ -38,22 +38,21 @@ let AccountController = class AccountController {
     async create(dto, user) {
         const account = await this.accountService.create(dto, user.id);
         if (dto.role === enum_1.UserRole.STAFF) {
-            await this.assignStaffPermissions(account.id);
+            const menus = await this.menuService.findAll();
+            const perms = await this.permissionService.findAll();
+            const obj = [];
+            menus.forEach((menu) => {
+                perms.forEach((perm) => {
+                    obj.push({
+                        accountId: account.id,
+                        menuId: menu.id,
+                        permissionId: perm.id,
+                    });
+                });
+            });
+            await this.userPermService.create(obj);
         }
         return account;
-    }
-    async assignStaffPermissions(accountId) {
-        console.log("Assigning staff permissions for:", accountId);
-        const [menus, perms] = await Promise.all([
-            this.menuService.findAll(),
-            this.permissionService.findAll(),
-        ]);
-        const userPermissions = menus.flatMap((menu) => perms.map((perm) => ({
-            accountId,
-            menuId: menu.id,
-            permissionId: perm.id,
-        })));
-        await this.userPermService.create(userPermissions);
     }
     async getAllSubAdmins(paginationDto) {
         return this.accountService.findAllSubAdmins(paginationDto);

@@ -28,6 +28,10 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ type: 'int', nullable: true }),
     __metadata("design:type", Number)
+], UserPermission.prototype, "menuId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
 ], UserPermission.prototype, "permissionId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'boolean', default: false }),

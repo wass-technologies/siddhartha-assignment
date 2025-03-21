@@ -4,6 +4,7 @@ import { Permission } from 'src/permissions/entities/permission.entity';
 export declare class UserPermission {
     id: number;
     accountId: string;
+    menuId: number;
     permissionId: number;
     status: boolean;
     updatedAt: Date;

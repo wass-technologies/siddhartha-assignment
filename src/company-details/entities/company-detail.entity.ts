@@ -37,12 +37,8 @@ export class SubAdmin {
   @ManyToOne(() => Account, (account) => account.subAdmins)
   account: Account;
 
-  @ManyToOne(() => School, (school) => school.subAdmins, { 
-    cascade: true, 
-    onDelete: 'CASCADE', 
-    onUpdate: 'CASCADE' 
-  })
-  school: School;
+  @OneToMany(() => School, (school) => school.subAdmin)
+  schools: School[];
 }
 
 

@@ -25,7 +25,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { PermissionAction, SchoolStatus, UserRole } from 'src/enum';
-import { SchoolDetailsService } from './company-details.service';
+import { SubAdminDetailsService } from './company-details.service';
 import {
   PaginationDto,
   PaginationSDto,
@@ -33,71 +33,42 @@ import {
   StatusDto,
 } from './dto/company-detail.dto';
 import { Response } from 'express';
+import { SchoolDto } from 'src/user-details/dto/update-user-details';
 
-@Controller('school-details')
+@Controller('sub-admin')
 @UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
-export class SchoolDetailsController {
-  constructor(private readonly schoolService: SchoolDetailsService) {}
+export class SubAdminDetailsController {
+  constructor(private readonly schoolService: SubAdminDetailsService) {}
 
+  @Get('schools')
+  @Roles(UserRole.SUB_ADMIN)
+  getSubAdminSchools(@Body() paginationDto: PaginationDto, @CurrentUser() user: Account) {
+    return this.schoolService.getSchools(user.id, paginationDto);
+  }
 
-  //Create
+  @Get(':schoolId')
+  @Roles(UserRole.SUB_ADMIN)
+  findSchool(@Param('schoolId') schoolId: string, @CurrentUser() user: Account) {
+    return this.schoolService.findSchool(user.id, schoolId);
+  }
 
-  // @Post('create')
-  // @Roles(UserRole.MAIN_ADMIN)
-  // async createSchool(@Body() dto: SchoolDetailDto) {
-  //   return this.schoolService.createSchool(dto);
-  // }
+  @Put('update/:schoolId')
+  @Roles(UserRole.SUB_ADMIN)
+  updateSchoolDetails(@Param('schoolId') schoolId: string, @Body() dto: SchoolDto, @CurrentUser() user: Account) {
+    return this.schoolService.updateSchoolDetails(user.id, schoolId, dto);
+  }
 
-  // //Read 
+  @Put('status/:schoolId')
+  @Roles(UserRole.SUB_ADMIN)
+  updateSchoolStatus(@Param('schoolId') schoolId: string, @Body('status') status: SchoolStatus, @CurrentUser() user: Account) {
+    return this.schoolService.updateSchoolStatus(user.id, schoolId, status);
+  }
 
-  // @Get('all-school')
-  // @Roles(UserRole.MAIN_ADMIN, UserRole.STAFF)
-  // @CheckPermissions([PermissionAction.READ, 'school_detail'])
-  // async findList(@Body() dto: PaginationDto) {
-  //   return this.schoolService.findList(dto);
-  // }
+  @Delete('delete/:schoolId')
+  @Roles(UserRole.SUB_ADMIN)
+  deleteSchool(@Param('schoolId') schoolId: string, @CurrentUser() user: Account) {
+    return this.schoolService.deleteSchool(user.id, schoolId);
+  }
 
-  // @Get('by-status')
-  // @Roles(UserRole.STAFF)
-  // @CheckPermissions([PermissionAction.READ, 'school_detail'])
-  // async getSchoolsByStatus(@Body() paginationDto: PaginationSDto) {
-  //   return this.schoolService.findListByStatus(paginationDto);
-  // }
-
-  // @Get(':id')
-  // @Roles(UserRole.SUB_ADMIN, UserRole.STAFF)
-  // async findSchool(@Param('id') id: string) {
-  //   return this.schoolService.findSchool(id);
-  // }
-
-  // // Update 
-  // @Put(':id')
-  // @Roles(UserRole.MAIN_ADMIN)
-  // async update(@Param('id') id: string, @Body() dto: SchoolDetailDto) {
-  //   return this.schoolService.update(id, dto);
-  // }
-
-  // @Put(':id/status')
-  // @Roles(UserRole.MAIN_ADMIN)
-  // @CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
-  // async status(@Param('id') id: string, @Body() dto: StatusDto) {
-  //   return this.schoolService.status(id, dto);
-  // }
-
-  // // Delete
-
-  // @Delete(':id')
-  // @Roles(UserRole.MAIN_ADMIN)
-  // async deleteSchool(@Param('id') id: string) {
-  //   return this.schoolService.deleteSchool(id);
-  // }
-
-  // // Export
-  // @Get('export/pdf')
-  // @Roles(UserRole.STAFF)
-  // @CheckPermissions([PermissionAction.READ, 'school_detail'])
-  // async generateSchoolListPdf(@Res() res: Response) {
-  //   return this.schoolService.generateSchoolListPdf(res);
-  // }
 
 }

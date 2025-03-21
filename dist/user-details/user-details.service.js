@@ -19,29 +19,30 @@ const account_entity_1 = require("../account/entities/account.entity");
 const typeorm_2 = require("typeorm");
 const user_detail_entity_1 = require("./entities/user-detail.entity");
 const createSchoolTable_utils_1 = require("../utils/createSchoolTable.utils");
+const class_entity_1 = require("../class/entities/class.entity");
+const student_entity_1 = require("../student/entities/student.entity");
+const company_detail_entity_1 = require("../company-details/entities/company-detail.entity");
 let SchoolService = class SchoolService {
-    constructor(repo, accountrepo) {
+    constructor(repo, accountrepo, classRepo, studentRepo, subAdminRepository) {
         this.repo = repo;
         this.accountrepo = accountrepo;
+        this.classRepo = classRepo;
+        this.studentRepo = studentRepo;
+        this.subAdminRepository = subAdminRepository;
     }
-    async createSchool(dto) {
-        const existingSchool = await this.repo.findOne({ where: { name: dto.name } });
-        if (existingSchool) {
-            throw new common_1.ConflictException(`School with name "${dto.name}" already exists!`);
+    async getSchoolDetails(userId) {
+        const school = await this.repo.findOne({
+            where: { accountId: userId },
+        });
+        if (!school) {
+            throw new common_1.ForbiddenException('No associated school found.');
         }
-        const school = this.repo.create(dto);
-        return this.repo.save(school);
-    }
-    async findList(dto) {
-        const keyword = dto.keyword || '';
-        const query = this.repo
-            .createQueryBuilder('school')
+        return this.repo.createQueryBuilder('school')
             .leftJoinAndSelect('school.subAdmin', 'subAdmin')
-            .leftJoinAndSelect('school.companySchedule', 'companySchedule')
-            .leftJoinAndSelect('school.classes', 'classes')
             .select([
             'school.id',
             'school.name',
+            'school.email',
             'school.address1',
             'school.address2',
             'school.state',
@@ -49,100 +50,100 @@ let SchoolService = class SchoolService {
             'school.area',
             'school.pincode',
             'school.status',
-            'school.accountId',
             'school.createdAt',
             'school.updatedAt',
             'subAdmin.id',
-            'subAdmin.name',
-            'companySchedule.id',
-            'classes.id',
-            'classes.className'
-        ]);
-        query.andWhere(new typeorm_2.Brackets((qb) => {
-            qb.where('school.schoolName LIKE :schoolName', {
-                schoolName: '%' + keyword + '%',
-            });
-        }));
-        const [result, total] = await query
-            .skip(dto.offset)
-            .take(dto.limit)
-            .orderBy({ 'school.schoolName': 'ASC' })
-            .getManyAndCount();
-        return { result, total };
-    }
-    async findListByStatus(dto) {
-        const keyword = dto.keyword || '';
-        const query = this.repo
-            .createQueryBuilder('school')
-            .leftJoinAndSelect('school.subAdmin', 'subAdmin')
-            .leftJoinAndSelect('school.classes', 'classes')
-            .select([
-            'school.id',
-            'school.schoolName',
-            'school.address1',
-            'school.address2',
-            'school.state',
-            'school.city',
-            'school.area',
-            'school.pincode',
-            'school.schoolDesc',
-            'school.status',
-            'school.accountId',
-            'school.createdAt',
-            'school.updatedAt',
-            'subAdmin.id',
-            'subAdmin.name',
-            'classes.id',
-            'classes.className',
+            'subAdmin.name'
         ])
-            .where('school.status = :status', { status: dto.status });
-        if (dto.keyword) {
-            query.andWhere(new typeorm_2.Brackets((qb) => {
-                qb.where('school.name LIKE :name', {
-                    name: '%' + keyword + '%',
-                });
+            .where('school.id = :schoolId', { schoolId: school.id })
+            .getOne();
+    }
+    async getTotalClasses(userId, paginationDto) {
+        const school = await this.repo.findOne({ where: { accountId: userId } });
+        if (!school) {
+            throw new common_1.ForbiddenException('No associated school found.');
+        }
+        const { limit, offset, keyword } = paginationDto;
+        const query = this.classRepo.createQueryBuilder('class')
+            .where('class.schoolId = :schoolId', { schoolId: school.id })
+            .select(['class.id', 'class.className'])
+            .skip(offset)
+            .take(limit);
+        if (keyword) {
+            query.andWhere(new typeorm_2.Brackets(qb => {
+                qb.where('class.className LIKE :keyword', { keyword: `%${keyword}%` });
             }));
         }
-        const [result, total] = await query
-            .skip(dto.offset)
-            .take(dto.limit)
-            .orderBy({ 'school.name': 'ASC' })
-            .getManyAndCount();
+        const [result, total] = await query.getManyAndCount();
         return { result, total };
     }
-    async findSchool(id) {
-        const result = await this.repo
-            .createQueryBuilder('school')
-            .where('school.accountId = :accountId', { accountId: id })
-            .getOne();
-        if (!result) {
-            throw new common_1.NotFoundException('School not found!');
+    async getClassWiseStudentList(userId, classId, paginationDto) {
+        const school = await this.repo.findOne({ where: { accountId: userId } });
+        if (!school) {
+            throw new common_1.ForbiddenException('No associated school found.');
         }
-        return result;
+        const { limit, offset } = paginationDto;
+        const query = this.classRepo.createQueryBuilder('class')
+            .leftJoinAndSelect('class.students', 'students')
+            .where('class.id = :classId', { classId })
+            .andWhere('class.schoolId = :schoolId', { schoolId: school.id })
+            .select([
+            'class.id',
+            'class.className',
+            'students.id',
+            'students.studentName',
+            'students.age'
+        ])
+            .orderBy('students.studentName', 'ASC')
+            .skip(offset)
+            .take(limit);
+        const [classData, total] = await query.getManyAndCount();
+        if (!classData.length) {
+            throw new common_1.ForbiddenException('You do not have access to this class.');
+        }
+        return {
+            totalStudents: total,
+            students: classData,
+        };
     }
-    async update(id, dto) {
-        const result = await this.repo.findOne({ where: { accountId: id } });
-        if (!result) {
-            throw new common_1.NotFoundException('School not found!');
+    async getStudentById(userId, studentId) {
+        const school = await this.repo.findOne({ where: { accountId: userId } });
+        if (!school) {
+            throw new common_1.ForbiddenException('No associated school found.');
         }
-        const obj = Object.assign(result, dto);
-        return this.repo.save(obj);
+        const query = this.studentRepo.createQueryBuilder('student')
+            .leftJoinAndSelect('student.class', 'class')
+            .where('student.id = :studentId', { studentId })
+            .andWhere('class.schoolId = :schoolId', { schoolId: school.id })
+            .select([
+            'student.id',
+            'student.name',
+            'student.email',
+            'class.id',
+            'class.name'
+        ]);
+        const studentData = await query.getOne();
+        if (!studentData) {
+            throw new common_1.ForbiddenException('You do not have access to this student.');
+        }
+        return studentData;
     }
-    async status(id, dto) {
-        const result = await this.repo.findOne({ where: { accountId: id } });
-        if (!result) {
-            throw new common_1.NotFoundException('School detail not found!');
+    async assignSubAdmin(schoolId, subAdminId) {
+        const school = await this.repo.findOne({
+            where: { id: schoolId },
+            relations: ['subAdmin'],
+        });
+        if (!school) {
+            throw new common_1.NotFoundException('School not found');
         }
-        const obj = Object.assign(result, dto);
-        return this.repo.save(obj);
-    }
-    async deleteSchool(id) {
-        const result = await this.repo.findOne({ where: { accountId: id } });
-        if (!result) {
-            throw new common_1.NotFoundException('School not found!');
+        const subAdmin = await this.subAdminRepository.findOne({
+            where: { id: subAdminId },
+        });
+        if (!subAdmin) {
+            throw new common_1.NotFoundException('SubAdmin not found');
         }
-        await this.repo.remove(result);
-        return { message: 'School deleted successfully!' };
+        school.subAdmin = subAdmin;
+        return await this.repo.save(school);
     }
     async generateSchoolListPdf(res) {
         const schools = await this.repo.find();
@@ -161,7 +162,13 @@ exports.SchoolService = SchoolService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_detail_entity_1.School)),
     __param(1, (0, typeorm_1.InjectRepository)(account_entity_1.Account)),
+    __param(2, (0, typeorm_1.InjectRepository)(class_entity_1.ClassEntity)),
+    __param(3, (0, typeorm_1.InjectRepository)(student_entity_1.Student)),
+    __param(4, (0, typeorm_1.InjectRepository)(company_detail_entity_1.SubAdmin)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], SchoolService);
 //# sourceMappingURL=user-details.service.js.map

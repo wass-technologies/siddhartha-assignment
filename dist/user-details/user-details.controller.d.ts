@@ -1,24 +1,24 @@
-import { PaginationDto, PaginationSDto, SchoolDto, StatusDto } from './dto/update-user-details';
+import { PaginationDto } from './dto/update-user-details';
 import { School } from './entities/user-detail.entity';
 import { SchoolService } from './user-details.service';
 import { Response } from 'express';
+import { Account } from 'src/account/entities/account.entity';
 export declare class SchoolController {
     private readonly schoolService;
     constructor(schoolService: SchoolService);
-    createSchool(dto: SchoolDto): Promise<School>;
-    findList(dto: PaginationDto): Promise<{
-        result: School[];
+    getSchoolDetails(user: Account): Promise<School>;
+    getTotalClasses(paginationDto: PaginationDto, user: Account): Promise<{
+        result: import("../class/entities/class.entity").ClassEntity[];
         total: number;
     }>;
-    getSchoolsByStatus(paginationDto: PaginationSDto): Promise<{
-        result: School[];
-        total: number;
+    getClassWiseStudentList(body: {
+        classId: string;
+        paginationDto: PaginationDto;
+    }, user: Account): Promise<{
+        totalStudents: number;
+        students: import("../class/entities/class.entity").ClassEntity[];
     }>;
-    findSchool(id: string): Promise<School>;
-    update(id: string, dto: SchoolDto): Promise<School & SchoolDto>;
-    status(id: string, dto: StatusDto): Promise<School & StatusDto>;
-    deleteSchool(id: string): Promise<{
-        message: string;
-    }>;
+    getStudentById(studentId: string, user: Account): Promise<import("../student/entities/student.entity").Student>;
     generateSchoolListPdf(res: Response): Promise<void>;
+    assignSubAdmin(schoolId: string, subAdminId: string): Promise<School>;
 }
