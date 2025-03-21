@@ -1,5 +1,4 @@
 import { CreateClassDto, PaginationDto } from './dto/create-class.dto';
-import { UpdateClassDto } from './dto/update-class.dto';
 import { ClassEntity } from './entities/class.entity';
 import { Repository } from 'typeorm';
 import { Account } from 'src/account/entities/account.entity';
@@ -10,20 +9,17 @@ export declare class ClassService {
     private readonly schoolRepo;
     private readonly studentRepo;
     constructor(classRepo: Repository<ClassEntity>, schoolRepo: Repository<School>, studentRepo: Repository<Student>);
-    addClass(schoolId: string, dto: CreateClassDto): Promise<ClassEntity>;
-    getAllClasses(dto: PaginationDto, schoolId: string): Promise<{
-        result: ClassEntity[];
+    addClass(userId: string, schoolId: string, dto: CreateClassDto): Promise<ClassEntity>;
+    getAllClasses(userId: string, schoolId: string, dto: PaginationDto): Promise<{
         total: number;
+        classes: ClassEntity[];
     }>;
-    getClassById(classId: string): Promise<ClassEntity>;
+    getClassById(userId: string, classId: string): Promise<ClassEntity>;
     getStudents(dto: PaginationDto, classId: string, user: Account): Promise<{
         result: Student[];
         total: number;
     }>;
-    update(classId: string, dto: UpdateClassDto): Promise<{
-        message: string;
-    }>;
-    remove(schoolId: string, classId: string): Promise<{
+    remove(user: Account, schoolId: string, classId: string): Promise<{
         message: string;
     }>;
 }

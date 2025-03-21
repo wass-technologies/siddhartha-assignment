@@ -18,28 +18,45 @@ export class ClassService {
     @InjectRepository(Student) private readonly studentRepo : Repository<Student>,
 
   ){}
-
-  async addClass(schoolId: string, dto: CreateClassDto) {
-    const school = await this.schoolRepo.findOne({ where: { id: schoolId } });
-    if (!school) {
-      throw new NotFoundException('School not found');
+  async addClass(userId: string, schoolId: string, dto: CreateClassDto) {
+    const isAuthorized = await this.schoolRepo
+      .createQueryBuilder('school')
+      .leftJoin('school.subAdmin', 'subAdmin')
+      .where('school.id = :schoolId', { schoolId })
+      .andWhere('subAdmin.accountId = :userId', { userId })
+      .getExists();
+    if (!isAuthorized) {
+      throw new ForbiddenException('Access denied.');
     }
-
-    const existingClass = await this.classRepo.findOne({
-      where: { className: dto.className, school: { id: schoolId } },
-    });
-
-    if (existingClass) {
-      throw new ConflictException('Class already exists');
+    const classExists = await this.classRepo
+      .createQueryBuilder('class')
+      .where('LOWER(class.className) = LOWER(:className)', { className: dto.className })
+      .andWhere('class.schoolId = :schoolId', { schoolId })
+      .getExists();
+  
+    if (classExists) {
+      throw new ConflictException('Class already exists.');
     }
-
-    const newClass = this.classRepo.create({ ...dto, className: dto.className, school });
+    const newClass = this.classRepo.create({ ...dto, school: { id: schoolId } });
     return await this.classRepo.save(newClass);
   }
+  
+  
 
-  async getAllClasses(dto: PaginationDto, schoolId: string) {
-    const keyword = dto.keyword || '';
-    const query = this.classRepo.createQueryBuilder('class')
+  async getAllClasses(userId: string, schoolId: string, dto: PaginationDto) {
+    const { limit, offset, keyword = '' } = dto;
+    const isAuthorized = await this.schoolRepo
+      .createQueryBuilder('school')
+      .leftJoin('school.subAdmin', 'subAdmin')
+      .where('school.id = :schoolId', { schoolId })
+      .andWhere('subAdmin.accountId = :userId', { userId })
+      .getExists();
+  
+    if (!isAuthorized) {
+      throw new ForbiddenException('Access denied to this school.');
+    }
+    const query = this.classRepo
+      .createQueryBuilder('class')
       .leftJoinAndSelect('class.school', 'school')
       .select([
         'class.id',
@@ -49,83 +66,92 @@ export class ClassService {
       ])
       .where('class.schoolId = :schoolId', { schoolId });
 
-    if (dto.keyword) {
-      query.andWhere(
-        new Brackets((qb) => {
-          qb.where('class.className LIKE :keyword', { keyword: `%${keyword}%` });
-        }),
-      );
+    if (keyword.trim()) {
+      query.andWhere('LOWER(class.className) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
     }
-
-    const [result, total] = await query
-      .skip(dto.offset)
-      .take(dto.limit)
-      .orderBy({ 'class.className': 'ASC' })
+  
+    const [classes, total] = await query
+      .skip(offset)
+      .take(limit)
+      .orderBy('class.className', 'ASC')
       .getManyAndCount();
-
-    return { result, total };
+  
+    return { total, classes };
   }
-
-  async getClassById(classId: string) {
-    const classEntity = await this.classRepo.findOne({
-      where: { id: classId },
-      relations: ['school'],
-    });
-
+  
+  async getClassById(userId: string, classId: string) {
+    const classEntity = await this.classRepo
+      .createQueryBuilder('class')
+      .leftJoinAndSelect('class.school', 'school')
+      .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+      .where('class.id = :classId', { classId })
+      .getOne();
+  
     if (!classEntity) {
       throw new NotFoundException('Class not found');
     }
-
+  
+    if (classEntity.school.subAdmin?.accountId !== userId) {
+      throw new ForbiddenException('Access denied to this school.');
+    }
+  
     return classEntity;
   }
-
   async getStudents(dto: PaginationDto, classId: string, user: Account) {
-    const classEntity = await this.classRepo.createQueryBuilder('class')
+    const classEntity = await this.classRepo
+      .createQueryBuilder('class')
       .leftJoinAndSelect('class.school', 'school')
+      .leftJoinAndSelect('school.subAdmin', 'subAdmin')
       .where('class.id = :classId', { classId })
       .getOne();
-
+  
     if (!classEntity) throw new NotFoundException('Class not found');
     if (classEntity.school.status !== 'ACTIVE') throw new ForbiddenException('School is inactive');
-    if (user.role === UserRole.SUB_ADMIN && user.id !== classEntity.school.accountId) {
+
+    if (classEntity.school.subAdmin?.accountId !== user.id ) 
+      {
       throw new ForbiddenException('You do not have access to this class');
     }
-
-    const [students, total] = await this.studentRepo.createQueryBuilder('student')
+ 
+    const [students, total] = await this.studentRepo
+      .createQueryBuilder('student')
       .where('student.classId = :classId', { classId })
+      .orderBy('student.name', 'ASC') // Sorting by name for better organization
       .skip(dto.offset)
       .take(dto.limit)
       .getManyAndCount();
-
+  
     return { result: students, total };
   }
-
-  async update(classId: string, dto: UpdateClassDto) {
-    const classEntity = await this.classRepo.findOne({ where: { id: classId } });
-    if (!classEntity) throw new NotFoundException('Class not found');
-
-    await this.classRepo.update(classId, {...dto});
-    return { message: 'Class updated successfully' };
-  }
-
-  async remove(schoolId: string, classId: string) {
-    const classToDelete = await this.classRepo.createQueryBuilder('class')
+  
+  async remove(user: Account, schoolId: string, classId: string) {
+    const isAuthorized = await this.schoolRepo
+      .createQueryBuilder('school')
+      .leftJoin('school.subAdmin', 'subAdmin')
+      .where('school.id = :schoolId', { schoolId })
+      .andWhere('subAdmin.accountId = :userId', { userId: user.id })
+      .getExists();
+  
+    if (!isAuthorized) {
+      throw new ForbiddenException('You do not have permission to delete this class');
+    }
+    const classExists = await this.classRepo
+      .createQueryBuilder('class')
       .where('class.id = :classId', { classId })
       .andWhere('class.schoolId = :schoolId', { schoolId })
-      .getOne();
-
-    if (!classToDelete) throw new NotFoundException('Class Not Found');
-
-    await this.classRepo.remove(classToDelete);
+      .getExists();
+    if (!classExists) {
+      throw new NotFoundException('Class not found');
+    }
+    await this.classRepo.delete({ id: classId });
+  
     return { message: 'Class deleted successfully' };
   }
+  
+  
+  
+  }
 
- 
-
-
-
-
-}
 
 
 
