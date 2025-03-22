@@ -37,9 +37,9 @@ __decorate([
     __metadata("design:type", account_entity_1.Account)
 ], SubAdmin.prototype, "account", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => user_detail_entity_1.School, (school) => school.subAdmin),
-    __metadata("design:type", user_detail_entity_1.School)
-], SubAdmin.prototype, "school", void 0);
+    (0, typeorm_1.OneToMany)(() => user_detail_entity_1.School, (school) => school.subAdmin),
+    __metadata("design:type", Array)
+], SubAdmin.prototype, "schools", void 0);
 exports.SubAdmin = SubAdmin = __decorate([
     (0, typeorm_1.Entity)()
 ], SubAdmin);

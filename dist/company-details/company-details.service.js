@@ -23,40 +23,55 @@ let SubAdminDetailsService = class SubAdminDetailsService {
         this.subAdminRepo = subAdminRepo;
         this.schoolRepo = schoolRepo;
     }
-    async getSubAdminSchool(accountId) {
+    async getSubAdminSchools(accountId) {
         const subAdmin = await this.subAdminRepo
             .createQueryBuilder('subAdmin')
-            .leftJoinAndSelect('subAdmin.school', 'school')
+            .leftJoinAndSelect('subAdmin.schools', 'school')
             .where('subAdmin.accountId = :accountId', { accountId })
             .getOne();
-        if (!subAdmin || !subAdmin.school) {
-            throw new common_1.ForbiddenException('SubAdmin is not linked to any school or unauthorized.');
+        if (!subAdmin || !subAdmin.schools.length) {
+            throw new common_1.ForbiddenException('SubAdmin is not linked to any schools or unauthorized.');
         }
-        return subAdmin.school;
+        return subAdmin.schools;
     }
-    async getSchoolDetails(accountId) {
-        return this.getSubAdminSchool(accountId);
+    async getSchoolDetails(accountId, paginationDto) {
+        const { limit, offset, keyword } = paginationDto;
+        const query = this.schoolRepo
+            .createQueryBuilder('school')
+            .innerJoin('school.subAdmin', 'subAdmin')
+            .where('subAdmin.accountId = :accountId', { accountId })
+            .take(limit)
+            .skip(offset);
+        if (keyword) {
+            query.andWhere(new typeorm_2.Brackets(qb => {
+                qb.where('school.name LIKE :keyword', { keyword: `%${keyword}%` })
+                    .orWhere('school.email LIKE :keyword', { keyword: `%${keyword}%` })
+                    .orWhere('school.city LIKE :keyword', { keyword: `%${keyword}%` });
+            }));
+        }
+        const [schools, total] = await query.getManyAndCount();
+        return {
+            total,
+            limit,
+            offset,
+            data: schools,
+        };
     }
-    async updateSchoolDetails(accountId, dto) {
-        const school = await this.getSubAdminSchool(accountId);
-        await this.schoolRepo
-            .createQueryBuilder()
-            .update(user_detail_entity_1.School)
-            .set(dto)
-            .where('id = :schoolId', { schoolId: school.id })
-            .execute();
+    async updateSchoolDetails(accountId, schoolId, dto) {
+        const schools = await this.getSubAdminSchools(accountId);
+        const school = schools.find(s => s.id === schoolId);
+        if (!school)
+            throw new common_1.NotFoundException('School not found or unauthorized');
+        await this.schoolRepo.update(schoolId, dto);
         return { message: 'School details updated successfully', school };
     }
-    async updateSchoolStatus(accountId, status) {
-        const school = await this.getSubAdminSchool(accountId);
-        await this.schoolRepo
-            .createQueryBuilder()
-            .update(user_detail_entity_1.School)
-            .set({ status })
-            .where('id = :schoolId', { schoolId: school.id })
-            .execute();
-        const result = { id: school.id, name: school.name, status: school.status };
-        return { message: `School status updated to ${status}`, result };
+    async updateSchoolStatus(accountId, schoolId, status) {
+        const schools = await this.getSubAdminSchools(accountId);
+        const school = schools.find(s => s.id === schoolId);
+        if (!school)
+            throw new common_1.NotFoundException('School not found or unauthorized');
+        await this.schoolRepo.update(schoolId, { status });
+        return { message: `School status updated to ${status}`, result: { id: school.id, name: school.name, status } };
     }
 };
 exports.SubAdminDetailsService = SubAdminDetailsService;

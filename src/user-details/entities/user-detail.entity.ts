@@ -67,12 +67,11 @@ export class School {
   )
   account: Account;
 
-  @OneToOne(() => SubAdmin, (subAdmin) => subAdmin.school, {
-    cascade: true, 
-    onDelete: 'CASCADE', 
-    onUpdate: 'CASCADE'
+  @ManyToOne(() => SubAdmin, (subAdmin) => subAdmin.schools, {
+    cascade: true,
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'subAdminId' })
   subAdmin: SubAdmin;
    
 

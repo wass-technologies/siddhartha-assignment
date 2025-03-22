@@ -27,41 +27,45 @@ let SubAdminDetailsController = class SubAdminDetailsController {
     constructor(subAdminService) {
         this.subAdminService = subAdminService;
     }
-    async getSchoolDetails(user) {
-        return this.subAdminService.getSchoolDetails(user.id);
+    async getSchoolDetails(user, paginationDto) {
+        return this.subAdminService.getSchoolDetails(user.id, paginationDto);
     }
-    async updateSchoolDetails(user, dto) {
-        return this.subAdminService.updateSchoolDetails(user.id, dto);
+    async updateSchoolDetails(user, schoolId, dto) {
+        return this.subAdminService.updateSchoolDetails(user.id, schoolId, dto);
     }
-    async updateSchoolStatus(user, dto) {
-        return this.subAdminService.updateSchoolStatus(user.id, dto.status);
+    async updateSchoolStatus(user, schoolId, dto) {
+        return this.subAdminService.updateSchoolStatus(user.id, schoolId, dto.status);
     }
 };
 exports.SubAdminDetailsController = SubAdminDetailsController;
 __decorate([
-    (0, common_1.Get)('school'),
+    (0, common_1.Get)('schools'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account]),
+    __metadata("design:paramtypes", [account_entity_1.Account,
+        company_detail_dto_1.PaginationDto]),
     __metadata("design:returntype", Promise)
 ], SubAdminDetailsController.prototype, "getSchoolDetails", null);
 __decorate([
-    (0, common_1.Patch)('school-details'),
+    (0, common_1.Patch)('school/:schoolId/details'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, common_1.Param)('schoolId')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account, company_detail_dto_1.SchoolDetailDto]),
+    __metadata("design:paramtypes", [account_entity_1.Account, String, company_detail_dto_1.SchoolDetailDto]),
     __metadata("design:returntype", Promise)
 ], SubAdminDetailsController.prototype, "updateSchoolDetails", null);
 __decorate([
-    (0, common_1.Patch)('school/status'),
+    (0, common_1.Patch)('school/:schoolId/status'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, common_1.Param)('schoolId')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account, company_detail_dto_1.StatusDto]),
+    __metadata("design:paramtypes", [account_entity_1.Account, String, company_detail_dto_1.StatusDto]),
     __metadata("design:returntype", Promise)
 ], SubAdminDetailsController.prototype, "updateSchoolStatus", null);
 exports.SubAdminDetailsController = SubAdminDetailsController = __decorate([

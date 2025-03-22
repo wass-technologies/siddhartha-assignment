@@ -37,8 +37,8 @@ export class SubAdmin {
 
   @ManyToOne(() => Account, (account) => account.subAdmins)
   account: Account;
-
-  @OneToOne(() => School, (school) => school.subAdmin)
-  school: School;
+  
+  @OneToMany(() => School, (school) => school.subAdmin)
+  schools: School[];
 }
 

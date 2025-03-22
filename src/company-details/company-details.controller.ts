@@ -40,23 +40,33 @@ import { SchoolDto } from 'src/user-details/dto/update-user-details';
 export class SubAdminDetailsController {
   constructor(private readonly subAdminService: SubAdminDetailsService) {}
 
-
-  @Get('school')
+  @Get('schools')
   @Roles(UserRole.SUB_ADMIN)
-  async getSchoolDetails(@CurrentUser()user:Account) {
-    return this.subAdminService.getSchoolDetails(user.id);
+  async getSchoolDetails(
+    @CurrentUser() user: Account,
+    @Query() paginationDto: PaginationDto
+  ) {
+    return this.subAdminService.getSchoolDetails(user.id, paginationDto);
   }
 
-  @Patch('school-details')
+  @Patch('school/:schoolId/details')
   @Roles(UserRole.SUB_ADMIN)
-  async updateSchoolDetails(@CurrentUser()user:Account,@Body() dto: SchoolDetailDto) {
-    return this.subAdminService.updateSchoolDetails(user.id, dto);
+  async updateSchoolDetails(
+    @CurrentUser() user: Account,
+    @Param('schoolId') schoolId: string,
+    @Body() dto: SchoolDetailDto
+  ) {
+    return this.subAdminService.updateSchoolDetails(user.id, schoolId, dto);
   }
 
-  @Patch('school/status')
+  @Patch('school/:schoolId/status')
   @Roles(UserRole.SUB_ADMIN)
-  async updateSchoolStatus(@CurrentUser()user:Account, @Body() dto: StatusDto) {
-    return this.subAdminService.updateSchoolStatus(user.id, dto.status);
+  async updateSchoolStatus(
+    @CurrentUser() user: Account,
+    @Param('schoolId') schoolId: string,
+    @Body() dto: StatusDto
+  ) {
+    return this.subAdminService.updateSchoolStatus(user.id, schoolId, dto.status);
   }
 
 }
