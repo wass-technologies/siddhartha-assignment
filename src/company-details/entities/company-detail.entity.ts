@@ -14,6 +14,7 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -37,11 +38,7 @@ export class SubAdmin {
   @ManyToOne(() => Account, (account) => account.subAdmins)
   account: Account;
 
-  @OneToMany(() => School, (school) => school.subAdmin)
-  schools: School[];
+  @OneToOne(() => School, (school) => school.subAdmin)
+  school: School;
 }
-
-
-
-
 

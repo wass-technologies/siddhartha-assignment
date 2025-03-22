@@ -76,11 +76,12 @@ __decorate([
     __metadata("design:type", account_entity_1.Account)
 ], School.prototype, "account", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => company_detail_entity_1.SubAdmin, (subAdmin) => subAdmin.schools, {
+    (0, typeorm_1.OneToOne)(() => company_detail_entity_1.SubAdmin, (subAdmin) => subAdmin.school, {
         cascade: true,
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
     }),
+    (0, typeorm_1.JoinColumn)({ name: 'subAdminId' }),
     __metadata("design:type", company_detail_entity_1.SubAdmin)
 ], School.prototype, "subAdmin", void 0);
 __decorate([

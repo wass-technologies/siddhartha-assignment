@@ -43,8 +43,8 @@ let SchoolController = class SchoolController {
     async generateSchoolListPdf(res) {
         return this.schoolService.generateSchoolListPdf(res);
     }
-    async assignSubAdmin(schoolId, subAdminId) {
-        return this.schoolService.assignSubAdmin(schoolId, subAdminId);
+    async assignSubAdmin(dto) {
+        return this.schoolService.assignSubAdmin(dto);
     }
 };
 exports.SchoolController = SchoolController;
@@ -96,10 +96,9 @@ __decorate([
     (0, common_1.Patch)(':schoolId/assign-subadmin/:subAdminId'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
     (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.UPDATE, 'school_detail']),
-    __param(0, (0, common_1.Param)('schoolId')),
-    __param(1, (0, common_1.Param)('subAdminId')),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [update_user_details_1.AssignSubAdminDto]),
     __metadata("design:returntype", Promise)
 ], SchoolController.prototype, "assignSubAdmin", null);
 exports.SchoolController = SchoolController = __decorate([

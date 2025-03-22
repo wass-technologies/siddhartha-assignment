@@ -16,86 +16,55 @@ exports.SubAdminDetailsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const class_entity_1 = require("../class/entities/class.entity");
 const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
-const student_entity_1 = require("../student/entities/student.entity");
+const company_detail_entity_1 = require("./entities/company-detail.entity");
 let SubAdminDetailsService = class SubAdminDetailsService {
-    constructor(classRepo, schoolRepo, studentRepo) {
-        this.classRepo = classRepo;
+    constructor(subAdminRepo, schoolRepo) {
+        this.subAdminRepo = subAdminRepo;
         this.schoolRepo = schoolRepo;
-        this.studentRepo = studentRepo;
     }
-    async getSchools(userId, paginationDto) {
-        const { limit, offset, keyword } = paginationDto;
-        const query = this.schoolRepo
-            .createQueryBuilder('school')
-            .leftJoinAndSelect('school.subAdmin', 'subAdmin')
-            .where('subAdmin.accountId = :userId', { userId })
-            .orderBy('school.createdAt', 'DESC')
-            .skip(offset)
-            .take(limit);
-        if (keyword) {
-            query.andWhere('LOWER(school.name) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
+    async getSubAdminSchool(accountId) {
+        const subAdmin = await this.subAdminRepo
+            .createQueryBuilder('subAdmin')
+            .leftJoinAndSelect('subAdmin.school', 'school')
+            .where('subAdmin.accountId = :accountId', { accountId })
+            .getOne();
+        if (!subAdmin || !subAdmin.school) {
+            throw new common_1.ForbiddenException('SubAdmin is not linked to any school or unauthorized.');
         }
-        const [schools, total] = await query.getManyAndCount();
-        return { total, schools };
+        return subAdmin.school;
     }
-    async findSchool(userId, schoolId) {
-        var _a;
-        const school = await this.schoolRepo.findOne({
-            where: { id: schoolId },
-            relations: ['subAdmin'],
-        });
-        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
-            throw new common_1.ForbiddenException('You do not have permission to access this school.');
-        }
-        return school;
+    async getSchoolDetails(accountId) {
+        return this.getSubAdminSchool(accountId);
     }
-    async updateSchoolDetails(userId, schoolId, dto) {
-        var _a;
-        const school = await this.schoolRepo.findOne({
-            where: { id: schoolId },
-            relations: ['subAdmin'],
-        });
-        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
-            throw new common_1.ForbiddenException('You do not have permission to update this school.');
-        }
-        Object.assign(school, dto);
-        return this.schoolRepo.save(school);
+    async updateSchoolDetails(accountId, dto) {
+        const school = await this.getSubAdminSchool(accountId);
+        await this.schoolRepo
+            .createQueryBuilder()
+            .update(user_detail_entity_1.School)
+            .set(dto)
+            .where('id = :schoolId', { schoolId: school.id })
+            .execute();
+        return { message: 'School details updated successfully', school };
     }
-    async updateSchoolStatus(userId, schoolId, status) {
-        var _a;
-        const school = await this.schoolRepo.findOne({
-            where: { id: schoolId },
-            relations: ['subAdmin'],
-        });
-        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
-            throw new common_1.ForbiddenException('You do not have permission to update this school status.');
-        }
-        school.status = status;
-        return this.schoolRepo.save(school);
-    }
-    async deleteSchool(userId, schoolId) {
-        var _a;
-        const school = await this.schoolRepo.findOne({
-            where: { id: schoolId },
-            relations: ['subAdmin'],
-        });
-        if (!school || ((_a = school.subAdmin) === null || _a === void 0 ? void 0 : _a.accountId) !== userId) {
-            throw new common_1.ForbiddenException('You do not have permission to delete this school.');
-        }
-        await this.schoolRepo.remove(school);
-        return { message: 'School deleted successfully' };
+    async updateSchoolStatus(accountId, status) {
+        const school = await this.getSubAdminSchool(accountId);
+        await this.schoolRepo
+            .createQueryBuilder()
+            .update(user_detail_entity_1.School)
+            .set({ status })
+            .where('id = :schoolId', { schoolId: school.id })
+            .execute();
+        const result = { id: school.id, name: school.name, status: school.status };
+        return { message: `School status updated to ${status}`, result };
     }
 };
 exports.SubAdminDetailsService = SubAdminDetailsService;
 exports.SubAdminDetailsService = SubAdminDetailsService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(class_entity_1.ClassEntity)),
+    __param(0, (0, typeorm_1.InjectRepository)(company_detail_entity_1.SubAdmin)),
     __param(1, (0, typeorm_1.InjectRepository)(user_detail_entity_1.School)),
-    __param(2, (0, typeorm_1.InjectRepository)(student_entity_1.Student)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository])
 ], SubAdminDetailsService);
 //# sourceMappingURL=company-details.service.js.map

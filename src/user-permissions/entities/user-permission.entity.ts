@@ -23,7 +23,7 @@ export class UserPermission {
   @Column({ type: 'int', nullable: true })
   permissionId: number;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: true })
   status: boolean;
 
   @UpdateDateColumn()

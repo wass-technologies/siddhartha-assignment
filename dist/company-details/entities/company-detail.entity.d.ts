@@ -6,5 +6,5 @@ export declare class SubAdmin {
     email: string;
     accountId: string;
     account: Account;
-    schools: School[];
+    school: School;
 }

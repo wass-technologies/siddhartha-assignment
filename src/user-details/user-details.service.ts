@@ -2,7 +2,7 @@ import { ConflictException, ForbiddenException, Injectable, NotFoundException } 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/account/entities/account.entity';
 import { Brackets, Repository } from 'typeorm';
-import { PaginationDto, PaginationSDto, SchoolDto, StatusDto,} from './dto/update-user-details';
+import { AssignSubAdminDto, PaginationDto, PaginationSDto, SchoolDto, StatusDto,} from './dto/update-user-details';
 import { School } from './entities/user-detail.entity';
 import { UpdateUserStatusDto } from 'src/auth/dto/login.dto';
 import { createSchoolTable } from 'src/utils/createSchoolTable.utils';
@@ -141,30 +141,37 @@ export class SchoolService {
     return studentData;
   }
 
-  async assignSubAdmin(schoolId: string, subAdminId: string): Promise<School> {
-    const school = await this.repo.findOne({
-      where: { id: schoolId },
-      relations: ['subAdmin'],
-    });
-
+  async assignSubAdmin(dto: AssignSubAdminDto): Promise<School> {
+    const school = await this.repo
+      .createQueryBuilder('school')
+      .where('school.id = :schoolId', { schoolId: dto.schoolId })
+      .getOne();
+  
     if (!school) {
       throw new NotFoundException('School not found');
     }
-
-    const subAdmin = await this.subAdminRepository.findOne({
-      where: { id: subAdminId },
-    });
-
+ 
+    const subAdmin = await this.subAdminRepository
+      .createQueryBuilder('subAdmin')
+      .where('subAdmin.id = :subAdminId', { subAdminId: dto.subAdminId })
+      .getOne();
+  
     if (!subAdmin) {
       throw new NotFoundException('SubAdmin not found');
     }
+    await this.repo
+      .createQueryBuilder()
+      .update(School)
+      .set({ subAdmin: subAdmin })
+      .where('id = :schoolId', { schoolId: dto.schoolId })
+      .execute();
 
-    // Assign the subAdmin
-    school.subAdmin = subAdmin;
-
-    // Save the updated school entity
-    return await this.repo.save(school);
+    return {
+      ...school,
+      subAdmin,
+    };
   }
+  
 
 
   

@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Like, Repository } from 'typeorm';
-import { PaginationDto,} from './dto/company-detail.dto';
+import { PaginationDto, SchoolDetailDto,} from './dto/company-detail.dto';
 import { Account } from 'src/account/entities/account.entity';
 import { SchoolStatus, UserRole } from 'src/enum';
 import { ClassEntity } from 'src/class/entities/class.entity';
@@ -14,85 +14,53 @@ import { SubAdmin } from './entities/company-detail.entity';
 @Injectable()
 export class SubAdminDetailsService {
   constructor(
-    @InjectRepository (ClassEntity) private readonly classRepo:Repository<ClassEntity>,
+    @InjectRepository (SubAdmin) private readonly subAdminRepo: Repository<SubAdmin>,
     @InjectRepository(School) private readonly schoolRepo: Repository<School>,
-    @InjectRepository(Student) private readonly studentRepo:Repository<Student>
   ) {} 
 
-  async getSchools(userId: string, paginationDto: PaginationDto) {
-    const { limit, offset, keyword } = paginationDto;
-
-    const query = this.schoolRepo
-        .createQueryBuilder('school')
-        .leftJoinAndSelect('school.subAdmin', 'subAdmin')
-        .where('subAdmin.accountId = :userId', { userId })
-        .orderBy('school.createdAt', 'DESC')
-        .skip(offset)
-        .take(limit);
-
-    if (keyword) {
-        query.andWhere('LOWER(school.name) LIKE LOWER(:keyword)', { keyword: `%${keyword}%` });
+  private async getSubAdminSchool(accountId: string) {
+    const subAdmin = await this.subAdminRepo
+      .createQueryBuilder('subAdmin') 
+      .leftJoinAndSelect('subAdmin.school', 'school')
+      .where('subAdmin.accountId = :accountId', { accountId })
+      .getOne();
+  
+    if (!subAdmin || !subAdmin.school) {
+      throw new ForbiddenException('SubAdmin is not linked to any school or unauthorized.');
     }
-
-    const [schools, total] = await query.getManyAndCount();
-
-    return { total, schools };
-}
-
-async findSchool(userId: string, schoolId: string) {
-  const school = await this.schoolRepo.findOne({
-    where: { id: schoolId },
-    relations: ['subAdmin'],
-  });
-
-  if (!school || school.subAdmin?.accountId !== userId) {
-    throw new ForbiddenException('You do not have permission to access this school.');
+  
+    return subAdmin.school;
   }
-
-  return school;
-}
-
-async updateSchoolDetails(userId: string, schoolId: string, dto: SchoolDto) {
-  const school = await this.schoolRepo.findOne({
-    where: { id: schoolId },
-    relations: ['subAdmin'],
-  });
-
-  if (!school || school.subAdmin?.accountId !== userId) {
-    throw new ForbiddenException('You do not have permission to update this school.');
+  
+  
+  async getSchoolDetails(accountId: string) {
+    return this.getSubAdminSchool(accountId);
   }
+  
+  async updateSchoolDetails(accountId: string, dto: SchoolDetailDto) {
+    const school = await this.getSubAdminSchool(accountId);
 
-  Object.assign(school, dto);
-  return this.schoolRepo.save(school);
-}
-
-async updateSchoolStatus(userId: string, schoolId: string, status: SchoolStatus) {
-  const school = await this.schoolRepo.findOne({
-    where: { id: schoolId },
-    relations: ['subAdmin'],
-  });
-
-  if (!school || school.subAdmin?.accountId !== userId) {
-    throw new ForbiddenException('You do not have permission to update this school status.');
+    await this.schoolRepo
+      .createQueryBuilder()
+      .update(School)
+      .set(dto)
+      .where('id = :schoolId', { schoolId: school.id })
+      .execute();
+  
+    return { message: 'School details updated successfully',school };
   }
+  
+  async updateSchoolStatus(accountId: string, status: SchoolStatus) {
+    const school = await this.getSubAdminSchool(accountId);
 
-  school.status = status;
-  return this.schoolRepo.save(school);
-}
-
-async deleteSchool(userId: string, schoolId: string) {
-  const school = await this.schoolRepo.findOne({
-    where: { id: schoolId },
-    relations: ['subAdmin'],
-  });
-
-  if (!school || school.subAdmin?.accountId !== userId) {
-    throw new ForbiddenException('You do not have permission to delete this school.');
+    await this.schoolRepo
+      .createQueryBuilder()
+      .update(School)
+      .set({ status })
+      .where('id = :schoolId', { schoolId: school.id })
+      .execute();
+    const result={id:school.id, name: school.name, status:school.status };
+  
+    return { message: `School status updated to ${status}`,result };
   }
-
-  await this.schoolRepo.remove(school);
-  return { message: 'School deleted successfully' };
-}
-
-
 }

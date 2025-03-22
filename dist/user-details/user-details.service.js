@@ -128,22 +128,28 @@ let SchoolService = class SchoolService {
         }
         return studentData;
     }
-    async assignSubAdmin(schoolId, subAdminId) {
-        const school = await this.repo.findOne({
-            where: { id: schoolId },
-            relations: ['subAdmin'],
-        });
+    async assignSubAdmin(dto) {
+        const school = await this.repo
+            .createQueryBuilder('school')
+            .where('school.id = :schoolId', { schoolId: dto.schoolId })
+            .getOne();
         if (!school) {
             throw new common_1.NotFoundException('School not found');
         }
-        const subAdmin = await this.subAdminRepository.findOne({
-            where: { id: subAdminId },
-        });
+        const subAdmin = await this.subAdminRepository
+            .createQueryBuilder('subAdmin')
+            .where('subAdmin.id = :subAdminId', { subAdminId: dto.subAdminId })
+            .getOne();
         if (!subAdmin) {
             throw new common_1.NotFoundException('SubAdmin not found');
         }
-        school.subAdmin = subAdmin;
-        return await this.repo.save(school);
+        await this.repo
+            .createQueryBuilder()
+            .update(user_detail_entity_1.School)
+            .set({ subAdmin: subAdmin })
+            .where('id = :schoolId', { schoolId: dto.schoolId })
+            .execute();
+        return Object.assign(Object.assign({}, school), { subAdmin });
     }
     async generateSchoolListPdf(res) {
         const schools = await this.repo.find();

@@ -11,7 +11,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { PermissionAction, UserRole } from 'src/enum';
-import { PaginationDto,} from './dto/update-user-details';
+import { AssignSubAdminDto, PaginationDto,} from './dto/update-user-details';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { SchoolService } from './user-details.service';
 import { CheckPermissions } from 'src/auth/decorators/permissions.decorator';
@@ -63,11 +63,8 @@ export class SchoolController {
   @Patch(':schoolId/assign-subadmin/:subAdminId')
   @Roles(UserRole.MAIN_ADMIN)
   @CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
-  async assignSubAdmin(
-    @Param('schoolId') schoolId: string,
-    @Param('subAdminId') subAdminId: string,
-  ) {
-    return this.schoolService.assignSubAdmin(schoolId, subAdminId);
+  async assignSubAdmin(@Body()dto:AssignSubAdminDto) {
+    return this.schoolService.assignSubAdmin(dto);
   }
   
 

@@ -23,75 +23,47 @@ const roles_guard_1 = require("../auth/guards/roles.guard");
 const enum_1 = require("../enum");
 const company_details_service_1 = require("./company-details.service");
 const company_detail_dto_1 = require("./dto/company-detail.dto");
-const update_user_details_1 = require("../user-details/dto/update-user-details");
 let SubAdminDetailsController = class SubAdminDetailsController {
-    constructor(schoolService) {
-        this.schoolService = schoolService;
+    constructor(subAdminService) {
+        this.subAdminService = subAdminService;
     }
-    getSubAdminSchools(paginationDto, user) {
-        return this.schoolService.getSchools(user.id, paginationDto);
+    async getSchoolDetails(user) {
+        return this.subAdminService.getSchoolDetails(user.id);
     }
-    findSchool(schoolId, user) {
-        return this.schoolService.findSchool(user.id, schoolId);
+    async updateSchoolDetails(user, dto) {
+        return this.subAdminService.updateSchoolDetails(user.id, dto);
     }
-    updateSchoolDetails(schoolId, dto, user) {
-        return this.schoolService.updateSchoolDetails(user.id, schoolId, dto);
-    }
-    updateSchoolStatus(schoolId, status, user) {
-        return this.schoolService.updateSchoolStatus(user.id, schoolId, status);
-    }
-    deleteSchool(schoolId, user) {
-        return this.schoolService.deleteSchool(user.id, schoolId);
+    async updateSchoolStatus(user, dto) {
+        return this.subAdminService.updateSchoolStatus(user.id, dto.status);
     }
 };
 exports.SubAdminDetailsController = SubAdminDetailsController;
 __decorate([
-    (0, common_1.Get)('schools'),
+    (0, common_1.Get)('school'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto, account_entity_1.Account]),
-    __metadata("design:returntype", void 0)
-], SubAdminDetailsController.prototype, "getSubAdminSchools", null);
+    __metadata("design:paramtypes", [account_entity_1.Account]),
+    __metadata("design:returntype", Promise)
+], SubAdminDetailsController.prototype, "getSchoolDetails", null);
 __decorate([
-    (0, common_1.Get)(':schoolId'),
+    (0, common_1.Patch)('school-details'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, common_1.Param)('schoolId')),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, account_entity_1.Account]),
-    __metadata("design:returntype", void 0)
-], SubAdminDetailsController.prototype, "findSchool", null);
-__decorate([
-    (0, common_1.Put)('update/:schoolId'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, common_1.Param)('schoolId')),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_user_details_1.SchoolDto, account_entity_1.Account]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [account_entity_1.Account, company_detail_dto_1.SchoolDetailDto]),
+    __metadata("design:returntype", Promise)
 ], SubAdminDetailsController.prototype, "updateSchoolDetails", null);
 __decorate([
-    (0, common_1.Put)('status/:schoolId'),
+    (0, common_1.Patch)('school/status'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, common_1.Param)('schoolId')),
-    __param(1, (0, common_1.Body)('status')),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, account_entity_1.Account]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [account_entity_1.Account, company_detail_dto_1.StatusDto]),
+    __metadata("design:returntype", Promise)
 ], SubAdminDetailsController.prototype, "updateSchoolStatus", null);
-__decorate([
-    (0, common_1.Delete)('delete/:schoolId'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, common_1.Param)('schoolId')),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, account_entity_1.Account]),
-    __metadata("design:returntype", void 0)
-], SubAdminDetailsController.prototype, "deleteSchool", null);
 exports.SubAdminDetailsController = SubAdminDetailsController = __decorate([
     (0, common_1.Controller)('sub-admin'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),

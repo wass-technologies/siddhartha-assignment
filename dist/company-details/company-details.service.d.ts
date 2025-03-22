@@ -1,23 +1,24 @@
 import { Repository } from 'typeorm';
-import { PaginationDto } from './dto/company-detail.dto';
+import { SchoolDetailDto } from './dto/company-detail.dto';
 import { SchoolStatus } from 'src/enum';
-import { ClassEntity } from 'src/class/entities/class.entity';
 import { School } from 'src/user-details/entities/user-detail.entity';
-import { Student } from 'src/student/entities/student.entity';
-import { SchoolDto } from 'src/user-details/dto/update-user-details';
+import { SubAdmin } from './entities/company-detail.entity';
 export declare class SubAdminDetailsService {
-    private readonly classRepo;
+    private readonly subAdminRepo;
     private readonly schoolRepo;
-    private readonly studentRepo;
-    constructor(classRepo: Repository<ClassEntity>, schoolRepo: Repository<School>, studentRepo: Repository<Student>);
-    getSchools(userId: string, paginationDto: PaginationDto): Promise<{
-        total: number;
-        schools: School[];
-    }>;
-    findSchool(userId: string, schoolId: string): Promise<School>;
-    updateSchoolDetails(userId: string, schoolId: string, dto: SchoolDto): Promise<School>;
-    updateSchoolStatus(userId: string, schoolId: string, status: SchoolStatus): Promise<School>;
-    deleteSchool(userId: string, schoolId: string): Promise<{
+    constructor(subAdminRepo: Repository<SubAdmin>, schoolRepo: Repository<School>);
+    private getSubAdminSchool;
+    getSchoolDetails(accountId: string): Promise<School>;
+    updateSchoolDetails(accountId: string, dto: SchoolDetailDto): Promise<{
         message: string;
+        school: School;
+    }>;
+    updateSchoolStatus(accountId: string, status: SchoolStatus): Promise<{
+        message: string;
+        result: {
+            id: string;
+            name: string;
+            status: SchoolStatus;
+        };
     }>;
 }

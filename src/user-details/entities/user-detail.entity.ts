@@ -7,8 +7,10 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -65,12 +67,14 @@ export class School {
   )
   account: Account;
 
-@ManyToOne(() => SubAdmin, (subAdmin) => subAdmin.schools, {
-  cascade: true, 
-  onDelete: 'CASCADE', 
-  onUpdate: 'CASCADE'
-})
-subAdmin: SubAdmin;  
+  @OneToOne(() => SubAdmin, (subAdmin) => subAdmin.school, {
+    cascade: true, 
+    onDelete: 'CASCADE', 
+    onUpdate: 'CASCADE'
+  })
+  @JoinColumn({ name: 'subAdminId' })
+  subAdmin: SubAdmin;
+   
 
   @OneToMany(() => ClassEntity, (classEntity) => classEntity.school)
   classes: ClassEntity[];

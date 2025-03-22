@@ -1,6 +1,6 @@
 import { Account } from 'src/account/entities/account.entity';
 import { Repository } from 'typeorm';
-import { PaginationDto } from './dto/update-user-details';
+import { AssignSubAdminDto, PaginationDto } from './dto/update-user-details';
 import { School } from './entities/user-detail.entity';
 import { Response } from 'express';
 import { ClassEntity } from 'src/class/entities/class.entity';
@@ -23,6 +23,6 @@ export declare class SchoolService {
         students: ClassEntity[];
     }>;
     getStudentById(userId: string, studentId: string): Promise<Student>;
-    assignSubAdmin(schoolId: string, subAdminId: string): Promise<School>;
+    assignSubAdmin(dto: AssignSubAdminDto): Promise<School>;
     generateSchoolListPdf(res: Response): Promise<void>;
 }
