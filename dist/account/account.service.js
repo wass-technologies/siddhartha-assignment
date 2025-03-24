@@ -163,6 +163,14 @@ let AccountService = class AccountService {
         const result = await this.repo.createQueryBuilder('account')
             .leftJoinAndSelect('account.schools', 'schools')
             .where('account.id = :accountId', { accountId })
+            .select([
+            'account.id',
+            'account.name',
+            'account.email',
+            'account.role',
+            'account.status',
+            'account.createdAt',
+        ])
             .getOne();
         if (!result)
             throw new common_1.NotFoundException('School Profile Not Found!');

@@ -1,3 +1,4 @@
+import { DefaultStatus } from 'src/enum';
 import { MenusService } from 'src/menus/menus.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
 import { UserPermissionsService } from 'src/user-permissions/user-permissions.service';
@@ -12,14 +13,14 @@ export declare class AccountController {
     private readonly userPermService;
     constructor(accountService: AccountService, menuService: MenusService, permissionService: PermissionsService, userPermService: UserPermissionsService);
     create(dto: CreateAccountDto, user: Account): Promise<any>;
-    findAllSubAdmins(dto: PaginationDto): Promise<any>;
-    subAdminDetail(id: string): Promise<any>;
-    staffDetail(id: string): Promise<any>;
-    getAllAccounts(dto: PaginationDto): Promise<any>;
-    getLoggedInSubAdmin(id: string): Promise<any>;
-    getLoggedInSchool(id: string): Promise<any>;
-    getStaffAccount(id: string): Promise<any>;
-    updateAccountStatus(id: string, status: string): Promise<{
+    getAllAccounts(dto: PaginationDto): Promise<{
+        result: Account[];
+        total: number;
+    }>;
+    getSubAdminAccount(user: Account): Promise<Account>;
+    getAccount(user: Account): Promise<Account>;
+    getStaffAccount(user: Account): Promise<Account>;
+    updateAccountStatus(id: string, status: DefaultStatus): Promise<{
         message: string;
     }>;
 }

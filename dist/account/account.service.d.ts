@@ -17,10 +17,10 @@ export declare class AccountService {
         result: Account[];
         total: number;
     }>;
-    getLoggedInSubAdminDetails(accountId: number): Promise<Account>;
-    getLoggedInSchoolDetails(accountId: number): Promise<Account>;
-    getStaffDetails(accountId: number): Promise<Account>;
-    updateAccountStatus(accountId: number, status: DefaultStatus): Promise<{
+    getLoggedInSubAdminDetails(accountId: string): Promise<Account>;
+    getLoggedInSchoolDetails(accountId: string): Promise<Account>;
+    getStaffDetails(accountId: string): Promise<Account>;
+    updateAccountStatus(accountId: string, status: DefaultStatus): Promise<{
         message: string;
     }>;
     getAccountsByStatus(status: DefaultStatus, dto: PaginationDto): Promise<{

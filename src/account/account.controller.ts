@@ -24,6 +24,8 @@ import { Account } from './entities/account.entity';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
 import { CreateAccountDto } from './dto/account.dto';
 
+
+@UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
 @Controller('account')
 export class AccountController {
   constructor(
@@ -60,26 +62,33 @@ export class AccountController {
   }
 
   @Get('all')
-  async getAllAccounts(@Query() dto: PaginationDto) {
+  @Roles(UserRole.MAIN_ADMIN,UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'account'])
+  async getAllAccounts(@Body() dto: PaginationDto) {
     return this.accountService.findAllAccounts(dto);
   }
 
-  @Get('logged-in/sub-admin/:id')
-  async getLoggedInSubAdmin(@Param('id') id: string) {
-    return this.accountService.getLoggedInSubAdminDetails(id);
+  @Get('sub-admin')
+  @Roles(UserRole.SUB_ADMIN)
+  async getSubAdminAccount(@CurrentUser()user:Account) {
+    return this.accountService.getLoggedInSchoolDetails(user.id);
   }
 
-  @Get('logged-in/school/:id')
-  async getLoggedInSchool(@Param('id') id: string) {
-    return this.accountService.getLoggedInSchoolDetails(id);
+  @Get('school')
+  @Roles(UserRole.SCHOOL)
+  async getAccount(@CurrentUser()user:Account) {
+    return this.accountService.getLoggedInSchoolDetails(user.id);
   }
 
-  @Get('staff-account/:id')
-  async getStaffAccount(@Param('id') id: string) {
-    return this.accountService.getStaffDetails(id);
+  @Get('staff-account')
+  @Roles(UserRole.STAFF)
+  async getStaffAccount(@CurrentUser()user:Account) {
+    return this.accountService.getStaffDetails(user.id);
   }
 
   @Patch('update-status/:id')
+  @Roles(UserRole.MAIN_ADMIN)
+  @CheckPermissions([PermissionAction.UPDATE, 'account'])
   async updateAccountStatus(@Param('id') id: string, @Body('status') status: DefaultStatus) {
     return this.accountService.updateAccountStatus(id,status );
   }
