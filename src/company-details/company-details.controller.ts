@@ -31,42 +31,52 @@ import {
   PaginationSDto,
   SchoolDetailDto,
   StatusDto,
+  UpdateSubAdminDto,
 } from './dto/company-detail.dto';
 import { Response } from 'express';
 import { SchoolDto } from 'src/user-details/dto/update-user-details';
+import { SubAdmin } from './entities/company-detail.entity';
 
 @Controller('sub-admin')
 @UseGuards(AuthGuard('jwt'), RolesGuard,PermissionsGuard)
 export class SubAdminDetailsController {
   constructor(private readonly subAdminService: SubAdminDetailsService) {}
 
-  @Get('schools')
-  @Roles(UserRole.SUB_ADMIN)
-  async getSchoolDetails(
-    @CurrentUser() user: Account,
-    @Query() paginationDto: PaginationDto
-  ) {
-    return this.subAdminService.getSchoolDetails(user.id, paginationDto);
+
+  @Get()
+  @Roles(UserRole.MAIN_ADMIN)
+  async getAllSubAdmins(@Body() paginationDto: PaginationDto): Promise<SubAdmin[]> {
+    return this.subAdminService.getAllSubAdmins(paginationDto);
   }
 
-  @Patch('school/:schoolId/details')
-  @Roles(UserRole.SUB_ADMIN)
-  async updateSchoolDetails(
-    @CurrentUser() user: Account,
+  @Get(':id')
+  @Roles(UserRole.MAIN_ADMIN, UserRole.SUB_ADMIN)
+  async getSubAdminById(@Param('id') id: string): Promise<SubAdmin> {
+    return this.subAdminService.getSubAdminById(id);
+  }
+
+  @Put(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async updateSubAdmin(
+    @Param('id') id: string,
+    @Body() updateSubAdminDto: UpdateSubAdminDto,
+  ): Promise<SubAdmin> {
+    return this.subAdminService.updateSubAdmin(id, updateSubAdminDto);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async deleteSubAdmin(@Param('id') id: string): Promise<void> {
+    return this.subAdminService.deleteSubAdmin(id);
+  }
+
+  @Get(':subAdminId/verify/:schoolId')
+  @Roles(UserRole.MAIN_ADMIN, UserRole.SUB_ADMIN)
+  async verifySubAdminAssociation(
+    @Param('subAdminId') subAdminId: string,
     @Param('schoolId') schoolId: string,
-    @Body() dto: SchoolDetailDto
-  ) {
-    return this.subAdminService.updateSchoolDetails(user.id, schoolId, dto);
+  ): Promise<boolean> {
+    return this.subAdminService.verifySubAdminAssociation(subAdminId, schoolId);
   }
-
-  @Patch('school/:schoolId/status')
-  @Roles(UserRole.SUB_ADMIN)
-  async updateSchoolStatus(
-    @CurrentUser() user: Account,
-    @Param('schoolId') schoolId: string,
-    @Body() dto: StatusDto
-  ) {
-    return this.subAdminService.updateSchoolStatus(user.id, schoolId, dto.status);
-  }
-
 }
+

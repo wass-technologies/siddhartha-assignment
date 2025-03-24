@@ -1,4 +1,10 @@
 export declare class CreateStudentDto {
-    name: string;
+    schoolId: string;
+    classId: string;
+    studentName: string;
     age: number;
+    gender: string;
+}
+export declare class PromoteStudentDto {
+    classId: string;
 }

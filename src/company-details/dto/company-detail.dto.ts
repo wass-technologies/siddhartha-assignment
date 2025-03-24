@@ -111,6 +111,10 @@ export class PaginationDto {
   offset: number;
 
   @IsOptional()
-  keyword: string;
+  keyword?: string;
+
+}
+
+export class UpdateSubAdminDto{
 
 }

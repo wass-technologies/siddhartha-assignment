@@ -108,10 +108,40 @@ let AccountService = class AccountService {
         }
         return payload;
     }
-    async findAllSubAdmins(dto) {
+    async findAllAccounts(dto) {
         const keyword = dto.keyword || '';
-        const [result, total] = await this.repo
-            .createQueryBuilder('account')
+        const queryBuilder = this.repo.createQueryBuilder('account')
+            .leftJoinAndSelect('account.subAdmins', 'subAdmins')
+            .leftJoinAndSelect('account.schools', 'schools')
+            .leftJoinAndSelect('account.staffDetails', 'staffDetails')
+            .select([
+            'account.id',
+            'account.name',
+            'account.email',
+            'account.role',
+            'account.status',
+            'account.createdAt',
+            'subAdmins.id',
+            'subAdmins.name',
+            'schools.id',
+            'schools.name',
+            'staffDetails.id',
+            'staffDetails.name'
+        ])
+            .where(new typeorm_2.Brackets(qb => {
+            qb.where('account.email LIKE :keyword', { keyword: `%${keyword}%` })
+                .orWhere('subAdmins.name LIKE :keyword', { keyword: `%${keyword}%` })
+                .orWhere('schools.name LIKE :keyword', { keyword: `%${keyword}%` })
+                .orWhere('staffDetails.name LIKE :keyword', { keyword: `%${keyword}%` });
+        }))
+            .orderBy('account.createdAt', 'DESC')
+            .skip(dto.offset)
+            .take(dto.limit);
+        const [result, total] = await queryBuilder.getManyAndCount();
+        return { result, total };
+    }
+    async getLoggedInSubAdminDetails(accountId) {
+        const result = await this.repo.createQueryBuilder('account')
             .leftJoinAndSelect('account.subAdmins', 'subAdmins')
             .select([
             'account.id',
@@ -123,52 +153,49 @@ let AccountService = class AccountService {
             'subAdmins.id',
             'subAdmins.name',
         ])
-            .where('account.role LIKE :role', { role: '%Sub_Admin%' })
-            .andWhere(new typeorm_2.Brackets((qb) => {
-            qb.where('account.email LIKE :email OR subAdmins.name LIKE :name', {
-                email: '%' + keyword + '%',
-                name: '%' + keyword + '%',
-            });
-        }))
-            .orderBy({ 'subAdmins.name': 'ASC' })
+            .where('account.id = :accountId', { accountId })
+            .getOne();
+        if (!result)
+            throw new common_1.NotFoundException('Sub Admin Profile Not Found!');
+        return result;
+    }
+    async getLoggedInSchoolDetails(accountId) {
+        const result = await this.repo.createQueryBuilder('account')
+            .leftJoinAndSelect('account.schools', 'schools')
+            .where('account.id = :accountId', { accountId })
+            .getOne();
+        if (!result)
+            throw new common_1.NotFoundException('School Profile Not Found!');
+        return result;
+    }
+    async getStaffDetails(accountId) {
+        const result = await this.repo.createQueryBuilder('account')
+            .leftJoinAndSelect('account.staffDetails', 'staffDetails')
+            .where('account.id = :accountId', { accountId })
+            .getOne();
+        if (!result)
+            throw new common_1.NotFoundException('Staff Profile Not Found!');
+        return result;
+    }
+    async updateAccountStatus(accountId, status) {
+        const updateResult = await this.repo.createQueryBuilder()
+            .update(account_entity_1.Account)
+            .set({ status })
+            .where('id = :accountId', { accountId })
+            .execute();
+        if (updateResult.affected === 0) {
+            throw new common_1.NotFoundException('Account not found');
+        }
+        return { message: 'Account status updated successfully' };
+    }
+    async getAccountsByStatus(status, dto) {
+        const [result, total] = await this.repo.createQueryBuilder('account')
+            .where('account.status = :status', { status })
+            .orderBy('account.createdAt', 'DESC')
             .skip(dto.offset)
             .take(dto.limit)
             .getManyAndCount();
         return { result, total };
-    }
-    async subAdminDetail(id) {
-        const result = await this.repo
-            .createQueryBuilder('account')
-            .leftJoinAndSelect('account.subAdmins', 'subAdmins')
-            .select([
-            'account.id',
-            'account.name',
-            'account.email',
-            'account.role',
-            'account.status',
-            'account.createdAt',
-            'subAdmins.id',
-            'subAdmins.name',
-        ])
-            .where('account.id = :id', { id })
-            .andWhere('account.roles LIKE :role', { role: '%Sub_Admin%' })
-            .getOne();
-        if (!result) {
-            throw new common_1.NotFoundException('Sub Admin Profile Not Found!');
-        }
-        return result;
-    }
-    async staffDetail(id) {
-        const result = await this.repo
-            .createQueryBuilder('account')
-            .leftJoinAndSelect('account.staffDetail', 'staffDetail')
-            .where('account.id = :id', { id })
-            .andWhere('account.roles LIKE :role', { role: '%Staff%' })
-            .getOne();
-        if (!result) {
-            throw new common_1.NotFoundException('Staff Profile Not Found!');
-        }
-        return result;
     }
 };
 exports.AccountService = AccountService;

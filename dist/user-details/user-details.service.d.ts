@@ -1,28 +1,32 @@
-import { Account } from 'src/account/entities/account.entity';
 import { Repository } from 'typeorm';
-import { AssignSubAdminDto, PaginationDto } from './dto/update-user-details';
+import { PaginationDto, SchoolDto } from './dto/update-user-details';
 import { School } from './entities/user-detail.entity';
 import { Response } from 'express';
-import { ClassEntity } from 'src/class/entities/class.entity';
-import { Student } from 'src/student/entities/student.entity';
 import { SubAdmin } from 'src/company-details/entities/company-detail.entity';
+import { SchoolStatus, UserRole } from 'src/enum';
 export declare class SchoolService {
-    private readonly repo;
-    private readonly accountrepo;
-    private readonly classRepo;
-    private readonly studentRepo;
-    private subAdminRepository;
-    constructor(repo: Repository<School>, accountrepo: Repository<Account>, classRepo: Repository<ClassEntity>, studentRepo: Repository<Student>, subAdminRepository: Repository<SubAdmin>);
-    getSchoolDetails(userId: string): Promise<School>;
-    getTotalClasses(userId: string, paginationDto: PaginationDto): Promise<{
-        result: ClassEntity[];
+    private readonly schoolRepo;
+    private subAdminRepo;
+    constructor(schoolRepo: Repository<School>, subAdminRepo: Repository<SubAdmin>);
+    private getSubAdminIdByAccountId;
+    private verifySubAdminOwnership;
+    assignSubAdmin(schoolId: string, subAdminId: string, replaceExisting: boolean): Promise<{
+        message: string;
+        school: School;
+    }>;
+    getAllSchools(paginationDto: PaginationDto): Promise<{
+        result: School[];
         total: number;
     }>;
-    getClassWiseStudentList(userId: string, classId: string, paginationDto: PaginationDto): Promise<{
-        totalStudents: number;
-        students: ClassEntity[];
+    getSchoolByAccountId(accountId: string): Promise<School>;
+    getSchoolsForSubAdmin(accountId: string, paginationDto: PaginationDto): Promise<{
+        result: School[];
+        total: number;
     }>;
-    getStudentById(userId: string, studentId: string): Promise<Student>;
-    assignSubAdmin(dto: AssignSubAdminDto): Promise<School>;
+    getSchoolById(accountId: string, schoolId: string, role: UserRole): Promise<School>;
+    updateSchool(accountId: string, schoolId: string, updateSchoolDto: SchoolDto, role: UserRole): Promise<School>;
+    updateSchoolStatus(accountId: string, schoolId: string, newStatus: SchoolStatus, role: UserRole): Promise<School>;
+    updateSchoolByAccountId(accountId: string, updateSchoolDto: SchoolDto): Promise<School>;
+    deleteSchool(accountId: string, schoolId: string): Promise<void>;
     generateSchoolListPdf(res: Response): Promise<void>;
 }

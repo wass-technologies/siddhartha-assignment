@@ -23,55 +23,52 @@ let SubAdminDetailsService = class SubAdminDetailsService {
         this.subAdminRepo = subAdminRepo;
         this.schoolRepo = schoolRepo;
     }
-    async getSubAdminSchools(accountId) {
-        const subAdmin = await this.subAdminRepo
-            .createQueryBuilder('subAdmin')
+    async getAllSubAdmins(paginationDto) {
+        const { offset, limit, keyword } = paginationDto;
+        const queryBuilder = this.subAdminRepo.createQueryBuilder('subAdmin')
             .leftJoinAndSelect('subAdmin.schools', 'school')
-            .where('subAdmin.accountId = :accountId', { accountId })
+            .where(new typeorm_2.Brackets((qb) => {
+            if (keyword) {
+                qb.where('subAdmin.name LIKE :keyword', { keyword: `%${keyword}%` })
+                    .orWhere('subAdmin.email LIKE :keyword', { keyword: `%${keyword}%` });
+            }
+        }))
+            .skip(offset)
+            .take(limit);
+        return await queryBuilder.getMany();
+    }
+    async getSubAdminById(id) {
+        const subAdmin = await this.subAdminRepo.createQueryBuilder('subAdmin')
+            .leftJoinAndSelect('subAdmin.schools', 'school')
+            .where('subAdmin.id = :id', { id })
             .getOne();
-        if (!subAdmin || !subAdmin.schools.length) {
-            throw new common_1.ForbiddenException('SubAdmin is not linked to any schools or unauthorized.');
+        if (!subAdmin) {
+            throw new common_1.NotFoundException('SubAdmin not found');
         }
-        return subAdmin.schools;
+        return subAdmin;
     }
-    async getSchoolDetails(accountId, paginationDto) {
-        const { limit, offset, keyword } = paginationDto;
-        const query = this.schoolRepo
-            .createQueryBuilder('school')
-            .innerJoin('school.subAdmin', 'subAdmin')
-            .where('subAdmin.accountId = :accountId', { accountId })
-            .take(limit)
-            .skip(offset);
-        if (keyword) {
-            query.andWhere(new typeorm_2.Brackets(qb => {
-                qb.where('school.name LIKE :keyword', { keyword: `%${keyword}%` })
-                    .orWhere('school.email LIKE :keyword', { keyword: `%${keyword}%` })
-                    .orWhere('school.city LIKE :keyword', { keyword: `%${keyword}%` });
-            }));
+    async updateSubAdmin(id, updateSubAdminDto) {
+        await this.subAdminRepo.update(id, updateSubAdminDto);
+        return this.getSubAdminById(id);
+    }
+    async deleteSubAdmin(id) {
+        const result = await this.subAdminRepo.delete(id);
+        if (result.affected === 0) {
+            throw new common_1.NotFoundException('SubAdmin not found');
         }
-        const [schools, total] = await query.getManyAndCount();
-        return {
-            total,
-            limit,
-            offset,
-            data: schools,
-        };
     }
-    async updateSchoolDetails(accountId, schoolId, dto) {
-        const schools = await this.getSubAdminSchools(accountId);
-        const school = schools.find(s => s.id === schoolId);
-        if (!school)
-            throw new common_1.NotFoundException('School not found or unauthorized');
-        await this.schoolRepo.update(schoolId, dto);
-        return { message: 'School details updated successfully', school };
-    }
-    async updateSchoolStatus(accountId, schoolId, status) {
-        const schools = await this.getSubAdminSchools(accountId);
-        const school = schools.find(s => s.id === schoolId);
-        if (!school)
-            throw new common_1.NotFoundException('School not found or unauthorized');
-        await this.schoolRepo.update(schoolId, { status });
-        return { message: `School status updated to ${status}`, result: { id: school.id, name: school.name, status } };
+    async verifySubAdminAssociation(subAdminId, schoolId) {
+        const school = await this.schoolRepo.createQueryBuilder('school')
+            .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+            .where('school.id = :schoolId', { schoolId })
+            .getOne();
+        if (!school) {
+            throw new common_1.NotFoundException('School not found');
+        }
+        if (school.subAdmin.id !== subAdminId) {
+            throw new common_1.ForbiddenException('SubAdmin is not associated with this school');
+        }
+        return true;
     }
 };
 exports.SubAdminDetailsService = SubAdminDetailsService;

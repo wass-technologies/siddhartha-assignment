@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PaginationDto = exports.PaginationSDto = exports.StatusDto = exports.SchoolDetailDto = void 0;
+exports.UpdateSubAdminDto = exports.PaginationDto = exports.PaginationSDto = exports.StatusDto = exports.SchoolDetailDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const enum_1 = require("../../enum");
@@ -129,4 +129,7 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PaginationDto.prototype, "keyword", void 0);
+class UpdateSubAdminDto {
+}
+exports.UpdateSubAdminDto = UpdateSubAdminDto;
 //# sourceMappingURL=company-detail.dto.js.map

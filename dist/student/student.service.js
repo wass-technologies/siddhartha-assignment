@@ -21,105 +21,88 @@ const class_entity_1 = require("../class/entities/class.entity");
 const enum_1 = require("../enum");
 const user_detail_entity_1 = require("../user-details/entities/user-detail.entity");
 let StudentService = class StudentService {
-    constructor(studentrepo, classRepo, schoolRepo) {
-        this.studentrepo = studentrepo;
+    constructor(studentRepo, classRepo, schoolRepo) {
+        this.studentRepo = studentRepo;
         this.classRepo = classRepo;
         this.schoolRepo = schoolRepo;
     }
-    async addStudent(schoolId, classId, dto, subAdmin) {
-        const school = await this.schoolRepo.findOne({ where: { id: schoolId },
-        });
-        if (!school) {
-            throw new common_1.NotFoundException('Sub School not found');
+    async verifyUserAccess(userId, schoolId, userRole) {
+        if (userRole === enum_1.UserRole.SCHOOL) {
+            const school = await this.schoolRepo.findOne({ where: { id: schoolId, accountId: userId } });
+            if (!school) {
+                throw new common_1.ForbiddenException('You do not have permission to manage this school');
+            }
         }
-        if (school.accountId != subAdmin) {
-            throw new common_1.NotFoundException('You are not authorized to perform action to this School');
+        else if (userRole === enum_1.UserRole.SUB_ADMIN) {
+            const isAuthorized = await this.schoolRepo
+                .createQueryBuilder('school')
+                .leftJoin('school.subAdmin', 'subAdmin')
+                .where('school.id = :schoolId', { schoolId })
+                .andWhere('subAdmin.accountId = :userId', { userId })
+                .getExists();
+            if (!isAuthorized) {
+                throw new common_1.ForbiddenException('You do not have permission to manage this school');
+            }
         }
-        if (school.status === enum_1.SchoolStatus.INACTIVE) {
-            throw new common_1.ForbiddenException('School is not Active');
+        else {
+            throw new common_1.ForbiddenException('Invalid role');
         }
-        const classEntity = await this.classRepo.findOne({ where: { id: classId, school: { id: schoolId } },
-            relations: ['school'] });
-        if (!classEntity) {
-            throw new common_1.NotFoundException('Class not found');
-        }
-        const newstudent = this.studentrepo.create(Object.assign(Object.assign({}, dto), { class: classEntity, studentName: dto.name }));
-        return await this.studentrepo.save(newstudent);
     }
-    async getAllStudents(dto) {
-        const keyword = dto.keyword || '';
-        const [result, total] = await this.studentrepo
+    async addStudent(userId, userRole, createStudentDto) {
+        await this.verifyUserAccess(userId, createStudentDto.schoolId, userRole);
+        const student = this.studentRepo.create(Object.assign(Object.assign({}, createStudentDto), { class: { id: createStudentDto.classId } }));
+        return await this.studentRepo.save(student);
+    }
+    async getAllStudents(userId, schoolId, classId, userRole, paginationDto) {
+        await this.verifyUserAccess(userId, schoolId, userRole);
+        const { limit, offset } = paginationDto;
+        const query = this.studentRepo
             .createQueryBuilder('student')
             .leftJoinAndSelect('student.class', 'class')
             .leftJoinAndSelect('class.school', 'school')
-            .select([
-            'student.id',
-            'student.studentName',
-            'student.age',
-            'student.address',
-            'school.id',
-            'school.schoolName',
-            'class.id',
-            'class.className',
-        ])
-            .where(new typeorm_2.Brackets((qb) => {
-            qb.where('student.studentName LIKE :name OR school.schoolName LIKE :school OR class.className LIKE :class', {
-                name: '%' + keyword + '%',
-                school: '%' + keyword + '%',
-                class: '%' + keyword + '%',
-            });
-        }))
-            .orderBy({ 'school.schoolName': 'ASC', 'class.className': 'ASC' })
-            .skip(dto.offset)
-            .take(dto.limit)
-            .getManyAndCount();
-        return { result, total };
+            .where('class.schoolId = :schoolId', { schoolId });
+        if (classId) {
+            query.andWhere('class.id = :classId', { classId });
+        }
+        if (paginationDto.keyword.trim()) {
+            query.andWhere(new typeorm_2.Brackets(qb => {
+                qb.where('LOWER(student.studentName) LIKE LOWER(:keyword)', { keyword: `%${paginationDto.keyword}%` });
+            }));
+        }
+        query.orderBy({ 'class.className': 'ASC', 'student.studentName': 'ASC' });
+        const [students, total] = await query.skip(offset).take(limit).getManyAndCount();
+        return { total, students };
     }
-    async getStudentById(studentId) {
-        const student = await this.studentrepo
-            .createQueryBuilder('student')
-            .where('student.id = :studentId', { studentId })
-            .getOne();
+    async updateStudent(userId, studentId, updateData, userRole) {
+        const student = await this.studentRepo.findOne({ where: { id: studentId }, relations: ['class', 'class.school'] });
         if (!student) {
             throw new common_1.NotFoundException('Student not found');
         }
-        return student;
+        await this.verifyUserAccess(userId, student.class.school.id, userRole);
+        Object.assign(student, updateData);
+        return await this.studentRepo.save(student);
     }
-    async updateStudent(schoolName, classId, dto, id, subAdmin) {
-        const subSchool = await this.schoolRepo.findOne({ where: { name: schoolName },
-        });
-        if (!subSchool) {
-            throw new common_1.NotFoundException('Sub School not found');
-        }
-        if (subSchool.accountId != subAdmin) {
-            throw new common_1.NotFoundException('You are not authorized');
-        }
-        if (subSchool.status === enum_1.SchoolStatus.INACTIVE) {
-            throw new common_1.ForbiddenException('School is not Active');
-        }
-        const classEntity = await this.classRepo.findOne({ where: { id: classId, school: { name: schoolName } },
-            relations: ['subSchool'] });
-        if (!classEntity) {
-            throw new common_1.NotFoundException('Class not found');
-        }
-        const student = await this.studentrepo.findOne({
-            where: { id: id, class: { id: classId } },
-            relations: ['class'],
-        });
+    async deleteStudent(userId, studentId, userRole) {
+        const student = await this.studentRepo.findOne({ where: { id: studentId }, relations: ['class', 'class.school'] });
         if (!student) {
             throw new common_1.NotFoundException('Student not found');
         }
-        if (dto.age)
-            student.age = dto.age;
-        if (dto.gender)
-            student.gender = dto.gender;
-        if (dto.address)
-            student.address = dto.address;
-        return await this.studentrepo.save(student);
-    }
-    async deleteStudent(studentId) {
-        await this.studentrepo.delete(studentId);
+        await this.verifyUserAccess(userId, student.class.school.id, userRole);
+        await this.studentRepo.delete({ id: studentId });
         return { message: 'Student deleted successfully' };
+    }
+    async promoteStudent(userId, studentId, promoteStudentDto, userRole) {
+        const student = await this.studentRepo.findOne({ where: { id: studentId }, relations: ['class', 'class.school'] });
+        if (!student) {
+            throw new common_1.NotFoundException('Student not found');
+        }
+        await this.verifyUserAccess(userId, student.class.school.id, userRole);
+        const newClass = await this.classRepo.findOne({ where: { id: promoteStudentDto.classId } });
+        if (!newClass) {
+            throw new common_1.NotFoundException('Target class not found');
+        }
+        student.class = newClass;
+        return await this.studentRepo.save(student);
     }
 };
 exports.StudentService = StudentService;

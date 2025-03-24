@@ -3,7 +3,9 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -12,7 +14,7 @@ import { CheckPermissions } from 'src/auth/decorators/permissions.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { PermissionAction, UserRole } from 'src/enum';
+import { DefaultStatus, PermissionAction, UserRole } from 'src/enum';
 import { MenusService } from 'src/menus/menus.service';
 import { PermissionsService } from 'src/permissions/permissions.service';
 import { UserPermissionsService } from 'src/user-permissions/user-permissions.service';
@@ -57,16 +59,28 @@ export class AccountController {
     return account;
   }
 
-  @Get('sub-admins')
-  async getAllSubAdmins(@Body() paginationDto: PaginationDto) {
-    return this.accountService.findAllSubAdmins(paginationDto);
+  @Get('all')
+  async getAllAccounts(@Query() dto: PaginationDto) {
+    return this.accountService.findAllAccounts(dto);
   }
-  @Get('sub-admins/:id')
-  async getSubAdminById(@Param('id') id: string) {
-    return this.accountService.subAdminDetail(id);
+
+  @Get('logged-in/sub-admin/:id')
+  async getLoggedInSubAdmin(@Param('id') id: string) {
+    return this.accountService.getLoggedInSubAdminDetails(id);
   }
-  @Get('staff/:id')
-  async getStaffById(@Param('id') id: string) {
-    return this.accountService.staffDetail(id);
+
+  @Get('logged-in/school/:id')
+  async getLoggedInSchool(@Param('id') id: string) {
+    return this.accountService.getLoggedInSchoolDetails(id);
+  }
+
+  @Get('staff-account/:id')
+  async getStaffAccount(@Param('id') id: string) {
+    return this.accountService.getStaffDetails(id);
+  }
+
+  @Patch('update-status/:id')
+  async updateAccountStatus(@Param('id') id: string, @Body('status') status: DefaultStatus) {
+    return this.accountService.updateAccountStatus(id,status );
   }
 }

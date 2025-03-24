@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from 'src/account/entities/account.entity';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, Repository, SelectQueryBuilder } from 'typeorm';
 import { AssignSubAdminDto, PaginationDto, PaginationSDto, SchoolDto, StatusDto,} from './dto/update-user-details';
 import { School } from './entities/user-detail.entity';
 import { UpdateUserStatusDto } from 'src/auth/dto/login.dto';
@@ -10,173 +10,147 @@ import { Response } from 'express';
 import { ClassEntity } from 'src/class/entities/class.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { SubAdmin } from 'src/company-details/entities/company-detail.entity';
+import { SchoolStatus, UserRole } from 'src/enum';
 
 @Injectable()
 export class SchoolService {
   constructor(
-    @InjectRepository(School) private readonly repo: Repository<School>,
-    @InjectRepository(Account)
-    private readonly accountrepo: Repository<Account>,
-    @InjectRepository(ClassEntity)
-    private readonly classRepo: Repository<ClassEntity>,
-    @InjectRepository (Student) private readonly studentRepo: Repository<Student>,
-   @InjectRepository(SubAdmin) private subAdminRepository: Repository<SubAdmin>,
+    @InjectRepository(School) private readonly schoolRepo: Repository<School>,
+    @InjectRepository(SubAdmin) private subAdminRepo: Repository<SubAdmin>,
   ) {}
-
-
-  async getSchoolDetails(userId: string) {
-    const school = await this.repo.findOne({
-      where: { accountId: userId }, 
-    });
-  
-    if (!school) {
-      throw new ForbiddenException('No associated school found.');
-    }
-  
-    return this.repo.createQueryBuilder('school')
-      .leftJoinAndSelect('school.subAdmin', 'subAdmin')
-      .select([
-        'school.id',
-        'school.name',
-        'school.email',
-        'school.address1',
-        'school.address2',
-        'school.state',
-        'school.city',
-        'school.area',
-        'school.pincode',
-        'school.status',
-        'school.createdAt',
-        'school.updatedAt',
-        'subAdmin.id',
-        'subAdmin.name'
-      ])
-      .where('school.id = :schoolId', { schoolId: school.id })
+  private async getSubAdminIdByAccountId(accountId: string): Promise<string> {
+    const subAdmin = await this.subAdminRepo.createQueryBuilder('subAdmin')
+      .where('subAdmin.accountId = :accountId', { accountId })
       .getOne();
+    if (!subAdmin) throw new NotFoundException('SubAdmin not found');
+    return subAdmin.id;
   }
-  
-  async getTotalClasses(userId: string, paginationDto: PaginationDto) {
-    const school = await this.repo.findOne({ where: { accountId: userId } });
-    if (!school) {
-      throw new ForbiddenException('No associated school found.');
-    }
 
-    const { limit, offset, keyword } = paginationDto;
+  private async verifySubAdminOwnership(accountId: string, schoolId: string) {
+    const subAdminId = await this.getSubAdminIdByAccountId(accountId);
+    const school = await this.schoolRepo.createQueryBuilder('school')
+      .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+      .where('school.id = :id', { id: schoolId })
+      .getOne();
     
-    const query = this.classRepo.createQueryBuilder('class')
-      .where('class.schoolId = :schoolId', { schoolId: school.id })
-      .select(['class.id', 'class.className'])
-      .skip(offset)
-      .take(limit);
-
-    if (keyword) {
-      query.andWhere(new Brackets(qb => {
-        qb.where('class.className LIKE :keyword', { keyword: `%${keyword}%` });
-      }));
-    }
-
-    const [result, total] = await query.getManyAndCount();
-    return { result, total };
+    if (!school) throw new NotFoundException('School not found');
+    if (school.subAdmin.id !== subAdminId) throw new ForbiddenException('Unauthorized access');
   }
 
-  async getClassWiseStudentList(userId: string, classId: string, paginationDto: PaginationDto) {
-    const school = await this.repo.findOne({ where: { accountId: userId } });
+  
+  async assignSubAdmin(schoolId: string, subAdminId: string, replaceExisting: boolean) {
+    const school = await this.schoolRepo.findOne({ 
+        where: { id: schoolId }, 
+        relations: ['subAdmin'] 
+    });
+
     if (!school) {
-      throw new ForbiddenException('No associated school found.');
+        throw new NotFoundException('School not found');
     }
 
-    const { limit, offset } = paginationDto;
-
-    const query = this.classRepo.createQueryBuilder('class')
-      .leftJoinAndSelect('class.students', 'students')
-      .where('class.id = :classId', { classId })
-      .andWhere('class.schoolId = :schoolId', { schoolId: school.id })
-      .select([
-        'class.id',
-        'class.className',
-        'students.id',
-        'students.studentName',
-        'students.age'
-      ])
-      .orderBy('students.studentName', 'ASC')
-      .skip(offset)
-      .take(limit);
-
-    const [classData, total] = await query.getManyAndCount();
-
-    if (!classData.length) {
-      throw new ForbiddenException('You do not have access to this class.');
+    if (school.subAdmin && !replaceExisting) {
+        throw new ConflictException('School already has a SubAdmin. Set replaceExisting to true to replace.');
     }
 
-    return {
-      totalStudents: total,
-      students: classData,
-    };
+    const subAdmin = await this.subAdminRepo.findOne({ where: { id: subAdminId } });
+
+    if (!subAdmin) {
+        throw new NotFoundException('SubAdmin not found');
+    }
+
+    // Assign the subAdmin to the school
+    school.subAdmin = subAdmin;
+    await this.schoolRepo.save(school);
+
+    return { message: 'SubAdmin assigned successfully', school };
 }
 
 
 
-  async getStudentById(userId: string, studentId: string) {
-    const school = await this.repo.findOne({ where: { accountId: userId } });
-    if (!school) {
-      throw new ForbiddenException('No associated school found.');
-    }
-
-    const query = this.studentRepo.createQueryBuilder('student')
-      .leftJoinAndSelect('student.class', 'class')
-      .where('student.id = :studentId', { studentId })
-      .andWhere('class.schoolId = :schoolId', { schoolId: school.id })
-      .select([
-        'student.id',
-        'student.name',
-        'student.email',
-        'class.id',
-        'class.name'
-      ]);
+  async getAllSchools(paginationDto: PaginationDto) {
+    const queryBuilder = this.schoolRepo.createQueryBuilder('school')
+      .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+      .skip(paginationDto.offset)
+      .take(paginationDto.limit);
     
-    const studentData = await query.getOne();
-    if (!studentData) {
-      throw new ForbiddenException('You do not have access to this student.');
-    }
-    return studentData;
+    const [result, total] = await queryBuilder.getManyAndCount();
+    return { result, total };
   }
 
-  async assignSubAdmin(dto: AssignSubAdminDto): Promise<School> {
-    const school = await this.repo
-      .createQueryBuilder('school')
-      .where('school.id = :schoolId', { schoolId: dto.schoolId })
+  async getSchoolByAccountId(accountId: string) {
+    const school = await this.schoolRepo.createQueryBuilder('school')
+      .where('school.accountId = :accountId', { accountId })
       .getOne();
-  
-    if (!school) {
-      throw new NotFoundException('School not found');
-    }
- 
-    const subAdmin = await this.subAdminRepository
-      .createQueryBuilder('subAdmin')
-      .where('subAdmin.id = :subAdminId', { subAdminId: dto.subAdminId })
+    
+    if (!school) throw new NotFoundException('School not found');
+    return school;
+  }
+
+  async getSchoolsForSubAdmin(accountId: string, paginationDto: PaginationDto) {
+    const subAdminId = await this.getSubAdminIdByAccountId(accountId);
+    const queryBuilder = this.schoolRepo.createQueryBuilder('school')
+      .leftJoinAndSelect('school.subAdmin', 'subAdmin')
+      .where('subAdmin.id = :subAdminId', { subAdminId })
+      .skip(paginationDto.offset)
+      .take(paginationDto.limit);
+    
+    const [result, total] = await queryBuilder.getManyAndCount();
+    return { result, total };
+  }
+
+  async getSchoolById(accountId: string, schoolId: string, role: UserRole) {
+    const school = await this.schoolRepo.createQueryBuilder('school')
+      .where('school.id = :id', { id: schoolId })
       .getOne();
-  
-    if (!subAdmin) {
-      throw new NotFoundException('SubAdmin not found');
-    }
-    await this.repo
-      .createQueryBuilder()
+    
+    if (!school) throw new NotFoundException('School not found');
+    if (role === UserRole.SUB_ADMIN) await this.verifySubAdminOwnership(accountId, schoolId);
+    if (role === UserRole.SCHOOL && school.accountId !== accountId) throw new ForbiddenException('Unauthorized access');
+    
+    return school;
+  }
+
+  async updateSchool(accountId: string, schoolId: string, updateSchoolDto: SchoolDto, role: UserRole) {
+    await this.getSchoolById(accountId, schoolId, role);
+    await this.schoolRepo.createQueryBuilder()
       .update(School)
-      .set({ subAdmin: subAdmin })
-      .where('id = :schoolId', { schoolId: dto.schoolId })
+      .set(updateSchoolDto)
+      .where('id = :id', { id: schoolId })
       .execute();
-
-    return {
-      ...school,
-      subAdmin,
-    };
+    return this.getSchoolById(accountId, schoolId, role);
   }
-  
 
+  async updateSchoolStatus(accountId: string, schoolId: string, newStatus: SchoolStatus, role: UserRole) {
+    if (role === UserRole.SUB_ADMIN) await this.verifySubAdminOwnership(accountId, schoolId);
+    await this.schoolRepo.createQueryBuilder()
+      .update(School)
+      .set({ status: newStatus })
+      .where('id = :id', { id: schoolId })
+      .execute();
+    return this.getSchoolById(accountId, schoolId, role);
+  }
 
-  
+  async updateSchoolByAccountId(accountId: string, updateSchoolDto: SchoolDto) {
+    await this.getSchoolByAccountId(accountId);
+    await this.schoolRepo.createQueryBuilder()
+      .update(School)
+      .set(updateSchoolDto)
+      .where('accountId = :accountId', { accountId })
+      .execute();
+    return this.getSchoolByAccountId(accountId);
+  }
+
+  async deleteSchool(accountId: string, schoolId: string) {
+    await this.getSchoolById(accountId, schoolId, UserRole.MAIN_ADMIN);
+    await this.schoolRepo.createQueryBuilder()
+      .delete()
+      .from(School)
+      .where('id = :id', { id: schoolId })
+      .execute();
+  }
+
   async generateSchoolListPdf(res: Response) {
-    const schools = await this.repo.find();
+    const schools = await this.schoolRepo.find();
 
     if (schools.length === 0) {
       throw new NotFoundException('No schools found');

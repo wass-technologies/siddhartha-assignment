@@ -54,14 +54,29 @@ let AccountController = class AccountController {
         }
         return account;
     }
-    async getAllSubAdmins(paginationDto) {
-        return this.accountService.findAllSubAdmins(paginationDto);
+    async findAllSubAdmins(dto) {
+        return this.accountService.findAllSubAdmins(dto);
     }
-    async getSubAdminById(id) {
+    async subAdminDetail(id) {
         return this.accountService.subAdminDetail(id);
     }
-    async getStaffById(id) {
+    async staffDetail(id) {
         return this.accountService.staffDetail(id);
+    }
+    async getAllAccounts(dto) {
+        return this.accountService.getAllAccounts(dto);
+    }
+    async getLoggedInSubAdmin(id) {
+        return this.accountService.getLoggedInSubAdmin(id);
+    }
+    async getLoggedInSchool(id) {
+        return this.accountService.getLoggedInSchool(id);
+    }
+    async getStaffAccount(id) {
+        return this.accountService.getStaffAccount(id);
+    }
+    async updateAccountStatus(id, status) {
+        return this.accountService.updateAccountStatus(id, status);
     }
 };
 exports.AccountController = AccountController;
@@ -78,25 +93,61 @@ __decorate([
 ], AccountController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('sub-admins'),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
     __metadata("design:returntype", Promise)
-], AccountController.prototype, "getAllSubAdmins", null);
+], AccountController.prototype, "findAllSubAdmins", null);
 __decorate([
-    (0, common_1.Get)('sub-admins/:id'),
+    (0, common_1.Get)('sub-admin/:id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AccountController.prototype, "getSubAdminById", null);
+], AccountController.prototype, "subAdminDetail", null);
 __decorate([
     (0, common_1.Get)('staff/:id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AccountController.prototype, "getStaffById", null);
+], AccountController.prototype, "staffDetail", null);
+__decorate([
+    (0, common_1.Get)('all'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "getAllAccounts", null);
+__decorate([
+    (0, common_1.Get)('logged-in/sub-admin/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "getLoggedInSubAdmin", null);
+__decorate([
+    (0, common_1.Get)('logged-in/school/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "getLoggedInSchool", null);
+__decorate([
+    (0, common_1.Get)('staff-account/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "getStaffAccount", null);
+__decorate([
+    (0, common_1.Patch)('update-status/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "updateAccountStatus", null);
 exports.AccountController = AccountController = __decorate([
     (0, common_1.Controller)('account'),
     __metadata("design:paramtypes", [account_service_1.AccountService,

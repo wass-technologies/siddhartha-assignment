@@ -1,23 +1,26 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
+  Post,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { PermissionAction, UserRole } from 'src/enum';
-import { AssignSubAdminDto, PaginationDto,} from './dto/update-user-details';
+import { PermissionAction, SchoolStatus, UserRole } from 'src/enum';
+import { AssignSubAdminDto, PaginationDto, SchoolDto,} from './dto/update-user-details';
 import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
 import { SchoolService } from './user-details.service';
 import { CheckPermissions } from 'src/auth/decorators/permissions.decorator';
 import { Response } from 'express';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { Account } from 'src/account/entities/account.entity';
+import { School } from './entities/user-detail.entity';
 
 
 @Controller('school')
@@ -26,32 +29,77 @@ export class SchoolController {
   constructor(private readonly schoolService: SchoolService) {}
 
 
-
-  @Get('details')
-  @Roles(UserRole.SCHOOL)
-  getSchoolDetails(@CurrentUser()user:Account) {
-    return this.schoolService.getSchoolDetails(user.id);
+  @Post(':id/assign-subadmin')
+  @Roles(UserRole.MAIN_ADMIN)
+  async assignSubAdmin(
+    @Param('id') schoolId: string,
+    @Body('subAdminId') subAdminId: string,
+    @Body('replaceExisting') replaceExisting: boolean
+  ) {
+    return this.schoolService.assignSubAdmin(schoolId, subAdminId, replaceExisting);
   }
 
-  @Get('classes')
-  @Roles(UserRole.SCHOOL)
-  getTotalClasses(@Body() paginationDto: PaginationDto, @CurrentUser()user:Account) {
-    return this.schoolService.getTotalClasses(user.id, paginationDto);
+  @Get('list')
+  @Roles(UserRole.MAIN_ADMIN)
+  async getAllSchools(@Body() paginationDto: PaginationDto) {
+    return this.schoolService.getAllSchools(paginationDto);
   }
 
-  @Get('class/students')
-  @Roles(UserRole.SCHOOL)
-  getClassWiseStudentList(@Body() body: { classId: string, paginationDto: PaginationDto }, @CurrentUser()user:Account) {
-      return this.schoolService.getClassWiseStudentList(user.id, body.classId, body.paginationDto);
+  @Get('subadmin/list')
+  @Roles(UserRole.SUB_ADMIN)
+  async getSchoolsForSubAdmin(
+    @CurrentUser() user: Account,
+    @Body() paginationDto: PaginationDto
+  ) {
+    return this.schoolService.getSchoolsForSubAdmin(user.id, paginationDto);
   }
-  
 
-  @Get('student/:id')
-  @Roles(UserRole.SCHOOL)
-  getStudentById(@Param('id') studentId: string,@CurrentUser()user:Account) {
-    return this.schoolService.getStudentById(user.id, studentId);
+  @Get(':id')
+  @Roles(UserRole.SUB_ADMIN, UserRole.MAIN_ADMIN, UserRole.SCHOOL)
+  async getSchoolById(
+    @CurrentUser() user: Account,
+    @Param('id') schoolId: string
+  ) {
+    return this.schoolService.getSchoolById(user.id, schoolId, user.role);
   }
-  
+
+  @Patch(':id')
+  @Roles(UserRole.SUB_ADMIN, UserRole.SCHOOL)
+  async updateSchool(
+    @CurrentUser() user: Account,
+    @Param('id') schoolId: string,
+    @Body() updateSchoolDto: SchoolDto
+  ) {
+    return this.schoolService.updateSchool(user.id, schoolId, updateSchoolDto, user.role);
+  }
+
+  @Patch(':id/status')
+  @Roles(UserRole.SUB_ADMIN, UserRole.MAIN_ADMIN)
+  async updateSchoolStatus(
+    @CurrentUser() user: Account,
+    @Param('id') schoolId: string,
+    @Body('status') newStatus: SchoolStatus
+  ) {
+    return this.schoolService.updateSchoolStatus(user.id, schoolId, newStatus, user.role);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.MAIN_ADMIN)
+  async deleteSchool(@CurrentUser() user: Account, @Param('id') schoolId: string) {
+    return this.schoolService.deleteSchool(user.id, schoolId);
+  }
+
+  @Get('account/me')
+  @Roles(UserRole.SCHOOL)
+  async getSchoolByAccount(@CurrentUser() user: Account) {
+    return this.schoolService.getSchoolByAccountId(user.id);
+  }
+
+  @Patch('account/me')
+  @Roles(UserRole.SCHOOL)
+  async updateSchoolByAccount(@CurrentUser() user: Account, @Body() updateSchoolDto: SchoolDto) {
+    return this.schoolService.updateSchoolByAccountId(user.id, updateSchoolDto);
+  }
 
   @Get('generate/pdf')
   @Roles(UserRole.MAIN_ADMIN,UserRole.STAFF)
@@ -60,12 +108,6 @@ export class SchoolController {
     return this.schoolService.generateSchoolListPdf(res);
   }
 
-  @Patch(':schoolId/assign-subadmin/:subAdminId')
-  @Roles(UserRole.MAIN_ADMIN)
-  @CheckPermissions([PermissionAction.UPDATE, 'school_detail'])
-  async assignSubAdmin(@Body()dto:AssignSubAdminDto) {
-    return this.schoolService.assignSubAdmin(dto);
-  }
   
 
  

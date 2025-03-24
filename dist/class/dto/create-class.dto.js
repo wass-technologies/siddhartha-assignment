@@ -17,6 +17,10 @@ class CreateClassDto {
 exports.CreateClassDto = CreateClassDto;
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateClassDto.prototype, "schoolId", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateClassDto.prototype, "className", void 0);

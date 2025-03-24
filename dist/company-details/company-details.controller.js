@@ -15,8 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SubAdminDetailsController = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
-const account_entity_1 = require("../account/entities/account.entity");
-const current_user_decorator_1 = require("../auth/decorators/current-user.decorator");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
 const permissions_guard_1 = require("../auth/guards/permissions.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
@@ -27,47 +25,65 @@ let SubAdminDetailsController = class SubAdminDetailsController {
     constructor(subAdminService) {
         this.subAdminService = subAdminService;
     }
-    async getSchoolDetails(user, paginationDto) {
-        return this.subAdminService.getSchoolDetails(user.id, paginationDto);
+    async getAllSubAdmins(paginationDto) {
+        return this.subAdminService.getAllSubAdmins(paginationDto);
     }
-    async updateSchoolDetails(user, schoolId, dto) {
-        return this.subAdminService.updateSchoolDetails(user.id, schoolId, dto);
+    async getSubAdminById(id) {
+        return this.subAdminService.getSubAdminById(id);
     }
-    async updateSchoolStatus(user, schoolId, dto) {
-        return this.subAdminService.updateSchoolStatus(user.id, schoolId, dto.status);
+    async updateSubAdmin(id, updateSubAdminDto) {
+        return this.subAdminService.updateSubAdmin(id, updateSubAdminDto);
+    }
+    async deleteSubAdmin(id) {
+        return this.subAdminService.deleteSubAdmin(id);
+    }
+    async verifySubAdminAssociation(subAdminId, schoolId) {
+        return this.subAdminService.verifySubAdminAssociation(subAdminId, schoolId);
     }
 };
 exports.SubAdminDetailsController = SubAdminDetailsController;
 __decorate([
-    (0, common_1.Get)('schools'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Query)()),
+    (0, common_1.Get)(),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account,
-        company_detail_dto_1.PaginationDto]),
+    __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
     __metadata("design:returntype", Promise)
-], SubAdminDetailsController.prototype, "getSchoolDetails", null);
+], SubAdminDetailsController.prototype, "getAllSubAdmins", null);
 __decorate([
-    (0, common_1.Patch)('school/:schoolId/details'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Param)('schoolId')),
-    __param(2, (0, common_1.Body)()),
+    (0, common_1.Get)(':id'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN, enum_1.UserRole.SUB_ADMIN),
+    __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account, String, company_detail_dto_1.SchoolDetailDto]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], SubAdminDetailsController.prototype, "updateSchoolDetails", null);
+], SubAdminDetailsController.prototype, "getSubAdminById", null);
 __decorate([
-    (0, common_1.Patch)('school/:schoolId/status'),
-    (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
-    __param(0, (0, current_user_decorator_1.CurrentUser)()),
-    __param(1, (0, common_1.Param)('schoolId')),
-    __param(2, (0, common_1.Body)()),
+    (0, common_1.Put)(':id'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [account_entity_1.Account, String, company_detail_dto_1.StatusDto]),
+    __metadata("design:paramtypes", [String, company_detail_dto_1.UpdateSubAdminDto]),
     __metadata("design:returntype", Promise)
-], SubAdminDetailsController.prototype, "updateSchoolStatus", null);
+], SubAdminDetailsController.prototype, "updateSubAdmin", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], SubAdminDetailsController.prototype, "deleteSubAdmin", null);
+__decorate([
+    (0, common_1.Get)(':subAdminId/verify/:schoolId'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN, enum_1.UserRole.SUB_ADMIN),
+    __param(0, (0, common_1.Param)('subAdminId')),
+    __param(1, (0, common_1.Param)('schoolId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], SubAdminDetailsController.prototype, "verifySubAdminAssociation", null);
 exports.SubAdminDetailsController = SubAdminDetailsController = __decorate([
     (0, common_1.Controller)('sub-admin'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),

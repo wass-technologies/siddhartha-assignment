@@ -14,54 +14,41 @@ import { Account } from 'src/account/entities/account.entity';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 export class ClassController {
   constructor(private readonly classService: ClassService) {}
-  @Post(':schoolId')
-  @Roles(UserRole.SUB_ADMIN)
-  async addClass(
-    @CurrentUser() user:Account,
-    @Param('schoolId') schoolId: string,
-    @Body() dto: CreateClassDto,
-  ) {
-    return this.classService.addClass(user.id, schoolId, dto);
+ 
+  @Post()
+  @Roles(UserRole.SCHOOL, UserRole.SUB_ADMIN)
+  async addClass(@CurrentUser() user:Account, @Body() createClassDto: CreateClassDto) {
+    const { schoolId, className } = createClassDto;
+    return this.classService.addClassToSchool(user.id, schoolId, className, user.role);
   }
-  @Get(':schoolId')
-  @Roles(UserRole.SUB_ADMIN)
-  async getAllClasses(
-    @CurrentUser()user:Account,
-    @Param('schoolId') schoolId: string,
-    @Body() dto: PaginationDto,
-  ) {
-    return this.classService.getAllClasses(user.id, schoolId, dto);
+  @Get()
+  @Roles(UserRole.SCHOOL, UserRole.SUB_ADMIN)
+  async getAllClasses(@CurrentUser() user:Account, @Body() paginationDto: PaginationDto, @Query('schoolId') schoolId: string) {
+    return this.classService.getAllClassesForSchool(user.id, schoolId, user.role, paginationDto);
   }
 
-  @Get('details/:classId')
-  @Roles(UserRole.SUB_ADMIN)
-  async getClassById(
-    @CurrentUser()user:Account,
-    @Param('classId') classId: string,
-  ) {
-    return this.classService.getClassById(user.id, classId);
+  @Get(':id')
+  @Roles(UserRole.SCHOOL, UserRole.SUB_ADMIN)
+  async getClassById(@CurrentUser() user:Account, @Param('id') classId: string) {
+    return this.classService.getClassById(user.id, classId, user.role);
   }
 
-  @Get('students/:classId')
-  @Roles(UserRole.SUB_ADMIN)
-  async getStudents(
-    @CurrentUser()user:Account,
-    @Param('classId') classId: string,
-    @Body() dto: PaginationDto,
-  ) {
-    return this.classService.getStudents(dto, classId, user);
+  @Patch(':id')
+  @Roles(UserRole.SCHOOL, UserRole.SUB_ADMIN)
+  async updateClass(@CurrentUser() user:Account, @Param('id') classId: string, @Body() updateClassDto: UpdateClassDto) {
+    return this.classService.updateClass(user.id, classId, updateClassDto.className, user.role);
   }
 
-  @Delete(':schoolId/:classId')
-  @Roles(UserRole.SUB_ADMIN)
-  async removeClass(
-    @CurrentUser()user:Account,
-    @Param('schoolId') schoolId: string,
-    @Param('classId') classId: string,
-  ) {
-    return this.classService.remove(user, schoolId, classId);
+  @Delete(':id')
+  @Roles(UserRole.SCHOOL, UserRole.SUB_ADMIN)
+  async deleteClass(@CurrentUser() user:Account, @Param('id') classId: string) {
+    return this.classService.deleteClass(user.id, classId, user.role);
   }
 
+  @Get(':id/students')
+  @Roles(UserRole.SCHOOL, UserRole.SUB_ADMIN)
+  async getStudentsInClass(@CurrentUser()user:Account, @Param('id') classId: string, @Body() paginationDto: PaginationDto) {
+    return this.classService.getStudentsInClass(user.id, classId, user.role, paginationDto);
+  }
 
-  
 }

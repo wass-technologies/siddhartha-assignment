@@ -21,5 +21,7 @@ export declare class PaginationSDto {
 export declare class PaginationDto {
     limit: number;
     offset: number;
-    keyword: string;
+    keyword?: string;
+}
+export declare class UpdateSubAdminDto {
 }

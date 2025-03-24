@@ -12,10 +12,14 @@ export declare class AccountController {
     private readonly userPermService;
     constructor(accountService: AccountService, menuService: MenusService, permissionService: PermissionsService, userPermService: UserPermissionsService);
     create(dto: CreateAccountDto, user: Account): Promise<any>;
-    getAllSubAdmins(paginationDto: PaginationDto): Promise<{
-        result: Account[];
-        total: number;
+    findAllSubAdmins(dto: PaginationDto): Promise<any>;
+    subAdminDetail(id: string): Promise<any>;
+    staffDetail(id: string): Promise<any>;
+    getAllAccounts(dto: PaginationDto): Promise<any>;
+    getLoggedInSubAdmin(id: string): Promise<any>;
+    getLoggedInSchool(id: string): Promise<any>;
+    getStaffAccount(id: string): Promise<any>;
+    updateAccountStatus(id: string, status: string): Promise<{
+        message: string;
     }>;
-    getSubAdminById(id: string): Promise<Account>;
-    getStaffById(id: string): Promise<Account>;
 }

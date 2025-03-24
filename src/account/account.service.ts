@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SchoolStatus, UserRole } from 'src/enum';
+import { DefaultStatus, SchoolStatus, UserRole } from 'src/enum';
 import { Brackets, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
@@ -79,88 +79,105 @@ export class AccountService {
     return payload;
 }
 
-  
+async findAllAccounts(dto: PaginationDto) {
+  const keyword = dto.keyword || '';
 
-  async findAllSubAdmins(dto: PaginationDto) {
-    const keyword = dto.keyword || '';
-  
-    const [result, total] = await this.repo
-      .createQueryBuilder('account')
+  const queryBuilder = this.repo.createQueryBuilder('account')
       .leftJoinAndSelect('account.subAdmins', 'subAdmins')
-  
+      .leftJoinAndSelect('account.schools', 'schools')
+      .leftJoinAndSelect('account.staffDetails', 'staffDetails')
       .select([
-        'account.id',
-        'account.name',
-        'account.email',
-        'account.role',
-        'account.status',
-        'account.createdAt',
-        'subAdmins.id',
-        'subAdmins.name',
+          'account.id',
+          'account.name',
+          'account.email',
+          'account.role',
+          'account.status',
+          'account.createdAt',
+          'subAdmins.id',
+          'subAdmins.name',
+          'schools.id',
+          'schools.name',
+          'staffDetails.id',
+          'staffDetails.name'
       ])
-      .where('account.role LIKE :role', { role: '%Sub_Admin%' }) 
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where(
-            'account.email LIKE :email OR subAdmins.name LIKE :name',
-            {
-              email: '%' + keyword + '%',
-              name: '%' + keyword + '%',
-            },
-          );
-        }),
+      .where(
+          new Brackets(qb => {
+              qb.where('account.email LIKE :keyword', { keyword: `%${keyword}%` })
+                  .orWhere('subAdmins.name LIKE :keyword', { keyword: `%${keyword}%` })
+                  .orWhere('schools.name LIKE :keyword', { keyword: `%${keyword}%` })
+                  .orWhere('staffDetails.name LIKE :keyword', { keyword: `%${keyword}%` });
+          })
       )
-      .orderBy({ 'subAdmins.name': 'ASC' })
+      .orderBy('account.createdAt', 'DESC')
+      .skip(dto.offset)
+      .take(dto.limit);
+
+  const [result, total] = await queryBuilder.getManyAndCount();
+  return { result, total };
+}
+
+async getLoggedInSubAdminDetails(accountId: string) {
+  const result = await this.repo.createQueryBuilder('account')
+      .leftJoinAndSelect('account.subAdmins', 'subAdmins')
+      .select([
+          'account.id',
+          'account.name',
+          'account.email',
+          'account.role',
+          'account.status',
+          'account.createdAt',
+          'subAdmins.id',
+          'subAdmins.name',
+      ])
+      .where('account.id = :accountId', { accountId })
+      .getOne();
+
+  if (!result) throw new NotFoundException('Sub Admin Profile Not Found!');
+  return result;
+}
+
+async getLoggedInSchoolDetails(accountId: string) {
+  const result = await this.repo.createQueryBuilder('account')
+      .leftJoinAndSelect('account.schools', 'schools')
+      .where('account.id = :accountId', { accountId })
+      .getOne();
+
+  if (!result) throw new NotFoundException('School Profile Not Found!');
+  return result;
+}
+
+async getStaffDetails(accountId: string) {
+  const result = await this.repo.createQueryBuilder('account')
+      .leftJoinAndSelect('account.staffDetails', 'staffDetails')
+      .where('account.id = :accountId', { accountId })
+      .getOne();
+
+  if (!result) throw new NotFoundException('Staff Profile Not Found!');
+  return result;
+}
+
+async updateAccountStatus(accountId: string, status: DefaultStatus) {
+  const updateResult = await this.repo.createQueryBuilder()
+      .update(Account)
+      .set({ status })
+      .where('id = :accountId', { accountId })
+      .execute();
+
+  if (updateResult.affected === 0) {
+      throw new NotFoundException('Account not found');
+  }
+  return { message: 'Account status updated successfully' };
+}
+
+async getAccountsByStatus(status: DefaultStatus, dto: PaginationDto) {
+  const [result, total] = await this.repo.createQueryBuilder('account')
+      .where('account.status = :status', { status })
+      .orderBy('account.createdAt', 'DESC')
       .skip(dto.offset)
       .take(dto.limit)
       .getManyAndCount();
-  
-    return { result, total };
-  }
 
-
-
-  async subAdminDetail(id: string) {
-    const result = await this.repo
-      .createQueryBuilder('account')
-      .leftJoinAndSelect('account.subAdmins', 'subAdmins')
-      .select([
-        'account.id',
-        'account.name',
-        'account.email',
-        'account.role',
-        'account.status',
-        'account.createdAt',
-        'subAdmins.id',
-        'subAdmins.name',
-
-      ])
-      .where('account.id = :id', { id })
-      .andWhere('account.roles LIKE :role', { role: '%Sub_Admin%' }) 
-      .getOne();
-  
-    if (!result) {
-      throw new NotFoundException('Sub Admin Profile Not Found!');
-    }
-  
-    return result;
-  }
-
-
-
-  async staffDetail(id: string) {
-    const result = await this.repo
-      .createQueryBuilder('account')
-      .leftJoinAndSelect('account.staffDetail', 'staffDetail')
-      .where('account.id = :id', { id })
-      .andWhere('account.roles LIKE :role', { role: '%Staff%' }) // Ensuring role is Staff
-      .getOne();
-  
-    if (!result) {
-      throw new NotFoundException('Staff Profile Not Found!');
-    }
-  
-    return result;
-  }
+  return { result, total };
+}
   
 }

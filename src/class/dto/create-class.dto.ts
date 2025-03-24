@@ -3,6 +3,10 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-vali
 
 export class CreateClassDto {
 
+
+  @IsNotEmpty()
+  schoolId: string;
+
     @IsNotEmpty()
     @IsString()
     className:string;
