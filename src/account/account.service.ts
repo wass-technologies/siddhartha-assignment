@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DefaultStatus, SchoolStatus, UserRole } from 'src/enum';
 import { Brackets, Repository } from 'typeorm';
@@ -6,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 
 import { Account } from './entities/account.entity';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
-import { CreateAccountDto } from './dto/account.dto';
+import { ChangePasswordDto, CreateAccountDto } from './dto/account.dto';
 import { School } from 'src/user-details/entities/user-detail.entity';
 import { SubAdmin } from 'src/company-details/entities/company-detail.entity';
 import { StaffDetail } from 'src/staff-details/entities/staff-detail.entity';
@@ -39,6 +39,7 @@ export class AccountService {
     const encryptedPassword = await bcrypt.hash(dto.password, 13);
     const obj = Object.assign({
       email: dto.email,
+      name:dto.name,
       password: encryptedPassword,
       createdBy,
       role: dto.role,
@@ -116,12 +117,11 @@ async findAllAccounts(dto: PaginationDto) {
   return { result, total };
 }
 
-async getLoggedInSubAdminDetails(accountId: string) {
+async getSubAdminDetails(accountId: string) {
   const result = await this.repo.createQueryBuilder('account')
       .leftJoinAndSelect('account.subAdmins', 'subAdmins')
       .select([
           'account.id',
-          'account.name',
           'account.email',
           'account.role',
           'account.status',
@@ -136,20 +136,20 @@ async getLoggedInSubAdminDetails(accountId: string) {
   return result;
 }
 
-async getLoggedInSchoolDetails(accountId: string) {
+async getSchoolDetails(accountId: string) {
   const result = await this.repo.createQueryBuilder('account')
-      .leftJoinAndSelect('account.schools', 'schools')
-      .where('account.id = :accountId', { accountId })
-      .select([
-        'account.id',
-        'account.name',
-        'account.email',
-        'account.role',
-        'account.status',
-        'account.createdAt',
-
-      ])
-      .getOne();
+    .leftJoinAndSelect('account.schools', 'schools')
+    .select([
+      'account.id',
+      'account.email',
+      'account.role',
+      'account.status',
+      'account.createdAt',
+      'schools.id',
+      'schools.name',
+    ])
+    .where('account.id = :accountId', { accountId })
+    .getOne();
 
   if (!result) throw new NotFoundException('School Profile Not Found!');
   return result;
@@ -157,12 +157,33 @@ async getLoggedInSchoolDetails(accountId: string) {
 
 async getStaffDetails(accountId: string) {
   const result = await this.repo.createQueryBuilder('account')
-      .leftJoinAndSelect('account.staffDetails', 'staffDetails')
-      .where('account.id = :accountId', { accountId })
-      .getOne();
+    .leftJoinAndSelect('account.staffDetails', 'staffDetails')
+    .select([
+      'account.id',
+      'account.email',
+      'account.role',
+      'account.status',
+      'account.createdAt',
+      'staffDetails.id',
+      'staffDetails.name',
+    ])
+    .where('account.id = :accountId', { accountId })
+    .getOne();
 
   if (!result) throw new NotFoundException('Staff Profile Not Found!');
   return result;
+}
+async checkUserStatus(accountId: string) {
+  const account = await this.repo.findOne({
+    where: { id: accountId },
+    select: ['id', 'email', 'name', 'status'],
+  });
+
+  if (!account) {
+    throw new NotFoundException('User not found');
+  }
+
+  return {account};
 }
 
 async updateAccountStatus(accountId: string, status: DefaultStatus) {
@@ -172,21 +193,36 @@ async updateAccountStatus(accountId: string, status: DefaultStatus) {
       .where('id = :accountId', { accountId })
       .execute();
 
-  if (updateResult.affected === 0) {
+  if (!updateResult) {
       throw new NotFoundException('Account not found');
   }
   return { message: 'Account status updated successfully' };
 }
 
-async getAccountsByStatus(status: DefaultStatus, dto: PaginationDto) {
-  const [result, total] = await this.repo.createQueryBuilder('account')
-      .where('account.status = :status', { status })
-      .orderBy('account.createdAt', 'DESC')
-      .skip(dto.offset)
-      .take(dto.limit)
-      .getManyAndCount();
+async changePassword(accountId: string, dto: ChangePasswordDto) {
+  const user = await this.repo.findOne({
+    where: { id: accountId },
+    select: ['id', 'password'],
+  });
 
-  return { result, total };
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+  if (!isMatch) {
+    throw new UnauthorizedException('Old password is incorrect');
+  }
+
+  if (dto.newPassword !== dto.confirmPassword) {
+    throw new BadRequestException('New password and confirm password do not match');
+  }
+
+  const hashedPassword = await bcrypt.hash(dto.newPassword, 13);
+  await this.repo.update(accountId, { password: hashedPassword });
+
+  return { message: 'Password updated successfully' };
 }
+
   
 }

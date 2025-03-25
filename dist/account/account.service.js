@@ -75,6 +75,7 @@ let AccountService = class AccountService {
         const encryptedPassword = await bcrypt.hash(dto.password, 13);
         const obj = Object.assign({
             email: dto.email,
+            name: dto.name,
             password: encryptedPassword,
             createdBy,
             role: dto.role,
@@ -140,12 +141,11 @@ let AccountService = class AccountService {
         const [result, total] = await queryBuilder.getManyAndCount();
         return { result, total };
     }
-    async getLoggedInSubAdminDetails(accountId) {
+    async getSubAdminDetails(accountId) {
         const result = await this.repo.createQueryBuilder('account')
             .leftJoinAndSelect('account.subAdmins', 'subAdmins')
             .select([
             'account.id',
-            'account.name',
             'account.email',
             'account.role',
             'account.status',
@@ -159,18 +159,19 @@ let AccountService = class AccountService {
             throw new common_1.NotFoundException('Sub Admin Profile Not Found!');
         return result;
     }
-    async getLoggedInSchoolDetails(accountId) {
+    async getSchoolDetails(accountId) {
         const result = await this.repo.createQueryBuilder('account')
             .leftJoinAndSelect('account.schools', 'schools')
-            .where('account.id = :accountId', { accountId })
             .select([
             'account.id',
-            'account.name',
             'account.email',
             'account.role',
             'account.status',
             'account.createdAt',
+            'schools.id',
+            'schools.name',
         ])
+            .where('account.id = :accountId', { accountId })
             .getOne();
         if (!result)
             throw new common_1.NotFoundException('School Profile Not Found!');
@@ -179,11 +180,30 @@ let AccountService = class AccountService {
     async getStaffDetails(accountId) {
         const result = await this.repo.createQueryBuilder('account')
             .leftJoinAndSelect('account.staffDetails', 'staffDetails')
+            .select([
+            'account.id',
+            'account.email',
+            'account.role',
+            'account.status',
+            'account.createdAt',
+            'staffDetails.id',
+            'staffDetails.name',
+        ])
             .where('account.id = :accountId', { accountId })
             .getOne();
         if (!result)
             throw new common_1.NotFoundException('Staff Profile Not Found!');
         return result;
+    }
+    async checkUserStatus(accountId) {
+        const account = await this.repo.findOne({
+            where: { id: accountId },
+            select: ['id', 'email', 'name', 'status'],
+        });
+        if (!account) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        return { account };
     }
     async updateAccountStatus(accountId, status) {
         const updateResult = await this.repo.createQueryBuilder()
@@ -191,19 +211,29 @@ let AccountService = class AccountService {
             .set({ status })
             .where('id = :accountId', { accountId })
             .execute();
-        if (updateResult.affected === 0) {
+        if (!updateResult) {
             throw new common_1.NotFoundException('Account not found');
         }
         return { message: 'Account status updated successfully' };
     }
-    async getAccountsByStatus(status, dto) {
-        const [result, total] = await this.repo.createQueryBuilder('account')
-            .where('account.status = :status', { status })
-            .orderBy('account.createdAt', 'DESC')
-            .skip(dto.offset)
-            .take(dto.limit)
-            .getManyAndCount();
-        return { result, total };
+    async changePassword(accountId, dto) {
+        const user = await this.repo.findOne({
+            where: { id: accountId },
+            select: ['id', 'password'],
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+        if (!isMatch) {
+            throw new common_1.UnauthorizedException('Old password is incorrect');
+        }
+        if (dto.newPassword !== dto.confirmPassword) {
+            throw new common_1.BadRequestException('New password and confirm password do not match');
+        }
+        const hashedPassword = await bcrypt.hash(dto.newPassword, 13);
+        await this.repo.update(accountId, { password: hashedPassword });
+        return { message: 'Password updated successfully' };
     }
 };
 exports.AccountService = AccountService;

@@ -22,7 +22,7 @@ import { AccountService } from './account.service';
 
 import { Account } from './entities/account.entity';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
-import { CreateAccountDto } from './dto/account.dto';
+import { ChangePasswordDto, CreateAccountDto } from './dto/account.dto';
 
 
 @UseGuards(AuthGuard('jwt'), RolesGuard, PermissionsGuard)
@@ -68,16 +68,24 @@ export class AccountController {
     return this.accountService.findAllAccounts(dto);
   }
 
+
+  @Get(':id/status')
+  @Roles(UserRole.MAIN_ADMIN,UserRole.STAFF)
+  @CheckPermissions([PermissionAction.READ, 'account'])
+  async checkStatus(@Param('id') accountId: string) {
+    return this.accountService.checkUserStatus(accountId);
+  }
+
   @Get('sub-admin')
   @Roles(UserRole.SUB_ADMIN)
   async getSubAdminAccount(@CurrentUser()user:Account) {
-    return this.accountService.getLoggedInSchoolDetails(user.id);
+    return this.accountService.getSchoolDetails(user.id);
   }
 
   @Get('school')
   @Roles(UserRole.SCHOOL)
   async getAccount(@CurrentUser()user:Account) {
-    return this.accountService.getLoggedInSchoolDetails(user.id);
+    return this.accountService.getSchoolDetails(user.id);
   }
 
   @Get('staff-account')
@@ -91,5 +99,11 @@ export class AccountController {
   @CheckPermissions([PermissionAction.UPDATE, 'account'])
   async updateAccountStatus(@Param('id') id: string, @Body('status') status: DefaultStatus) {
     return this.accountService.updateAccountStatus(id,status );
+  }
+
+  @Patch('change-password')
+  @Roles(UserRole.MAIN_ADMIN,UserRole.SUB_ADMIN,UserRole.SCHOOL,UserRole.STAFF)
+  async changePassword(@CurrentUser() user:Account, @Body() dto: ChangePasswordDto) {
+    return this.accountService.changePassword(user.id, dto);
   }
 }

@@ -9,3 +9,8 @@ export declare class CreateAccountDto {
     name: string;
     role: UserRole;
 }
+export declare class ChangePasswordDto {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}

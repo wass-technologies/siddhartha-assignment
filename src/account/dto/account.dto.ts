@@ -25,4 +25,10 @@ export class CreateAccountDto {
   @IsEnum(UserRole)
   role:UserRole;
 }
+export class ChangePasswordDto {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 

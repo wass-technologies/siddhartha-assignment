@@ -5,7 +5,7 @@ import { UserPermissionsService } from 'src/user-permissions/user-permissions.se
 import { AccountService } from './account.service';
 import { Account } from './entities/account.entity';
 import { PaginationDto } from 'src/company-details/dto/company-detail.dto';
-import { CreateAccountDto } from './dto/account.dto';
+import { ChangePasswordDto, CreateAccountDto } from './dto/account.dto';
 export declare class AccountController {
     private readonly accountService;
     private readonly menuService;
@@ -17,10 +17,16 @@ export declare class AccountController {
         result: Account[];
         total: number;
     }>;
+    checkStatus(accountId: string): Promise<{
+        account: Account;
+    }>;
     getSubAdminAccount(user: Account): Promise<Account>;
     getAccount(user: Account): Promise<Account>;
     getStaffAccount(user: Account): Promise<Account>;
     updateAccountStatus(id: string, status: DefaultStatus): Promise<{
+        message: string;
+    }>;
+    changePassword(user: Account, dto: ChangePasswordDto): Promise<{
         message: string;
     }>;
 }

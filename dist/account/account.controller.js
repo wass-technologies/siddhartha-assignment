@@ -57,17 +57,23 @@ let AccountController = class AccountController {
     async getAllAccounts(dto) {
         return this.accountService.findAllAccounts(dto);
     }
+    async checkStatus(accountId) {
+        return this.accountService.checkUserStatus(accountId);
+    }
     async getSubAdminAccount(user) {
-        return this.accountService.getLoggedInSchoolDetails(user.id);
+        return this.accountService.getSchoolDetails(user.id);
     }
     async getAccount(user) {
-        return this.accountService.getLoggedInSchoolDetails(user.id);
+        return this.accountService.getSchoolDetails(user.id);
     }
     async getStaffAccount(user) {
         return this.accountService.getStaffDetails(user.id);
     }
     async updateAccountStatus(id, status) {
         return this.accountService.updateAccountStatus(id, status);
+    }
+    async changePassword(user, dto) {
+        return this.accountService.changePassword(user.id, dto);
     }
 };
 exports.AccountController = AccountController;
@@ -91,6 +97,15 @@ __decorate([
     __metadata("design:paramtypes", [company_detail_dto_1.PaginationDto]),
     __metadata("design:returntype", Promise)
 ], AccountController.prototype, "getAllAccounts", null);
+__decorate([
+    (0, common_1.Get)(':id/status'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN, enum_1.UserRole.STAFF),
+    (0, permissions_decorator_1.CheckPermissions)([enum_1.PermissionAction.READ, 'account']),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "checkStatus", null);
 __decorate([
     (0, common_1.Get)('sub-admin'),
     (0, roles_decorator_1.Roles)(enum_1.UserRole.SUB_ADMIN),
@@ -125,6 +140,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], AccountController.prototype, "updateAccountStatus", null);
+__decorate([
+    (0, common_1.Patch)('change-password'),
+    (0, roles_decorator_1.Roles)(enum_1.UserRole.MAIN_ADMIN, enum_1.UserRole.SUB_ADMIN, enum_1.UserRole.SCHOOL, enum_1.UserRole.STAFF),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [account_entity_1.Account, account_dto_1.ChangePasswordDto]),
+    __metadata("design:returntype", Promise)
+], AccountController.prototype, "changePassword", null);
 exports.AccountController = AccountController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt'), roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
     (0, common_1.Controller)('account'),

@@ -17,7 +17,7 @@ import { StaffDetail } from 'src/staff-details/entities/staff-detail.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Account,School,SubAdmin,StaffDetail]),
+    TypeOrmModule.forFeature([Account, School, SubAdmin, StaffDetail]),
     AuthModule,
     MenusModule,
     PermissionsModule,
